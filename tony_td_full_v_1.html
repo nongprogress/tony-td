@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>TONY TD — Full v1.3 (iPhone Viewer AutoStart)</title>
+<style>
+  :root{--bg:#0b1220;--ink:#e2e8f0;--mut:#94a3b8;--card:#0f172a;--line:#334155;--pri:#22d3ee;--acc:#60a5fa;--ok:#22c55e;--bad:#ef4444;--gold:#facc15}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;padding:0;overscroll-behavior:none}
+  body{background:var(--bg);color:var(--ink);font:14px system-ui,Inter,Segoe UI,Roboto;-webkit-font-smoothing:antialiased;-webkit-user-select:none;-webkit-touch-callout:none}
+  .wrap{max-width:1200px;margin:8px auto;padding:10px}
+  .header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .title{font-size:18px;font-weight:800}
+  .btn{background:var(--pri);color:#001b2a;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;touch-action:manipulation}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn.small{padding:8px 12px}
+  .badge{border:1px solid var(--line);padding:6px 10px;border-radius:10px;color:var(--mut);display:flex;gap:6px;align-items:center}
+  .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .section{margin:0 0 8px 0;font-weight:800}
+  #world{position:relative;height:520px;border:1px solid var(--line);border-radius:12px;background:#0a0f1a;overflow:hidden;touch-action:none}
+  .tile{position:absolute;width:46px;height:46px;border-radius:8px}
+  .tile.path{background:#0b1e34;border:1px solid #10335d}
+  .tile.build{background:#0c1424;border:1px dashed #1f3861}
+  .base{position:absolute;width:42px;height:42px;border-radius:10px;background:#1f2937;border:2px solid #94a3b8}
+  .tower{position:absolute;width:26px;height:26px;border-radius:6px;border:2px solid #0b3b2a;background:#22c55e}
+  .tower.sniper{background:#38bdf8;border-color:#075985}
+  .tower.frost{background:#a5f3fc;border-color:#155e75}
+  .enemy{position:absolute;width:20px;height:20px;border-radius:6px;background:#ef4444}
+  .enemy.fly{background:#f97316}
+  .enemy.brute{background:#8b5cf6}
+  .enemy.boss{background:linear-gradient(145deg,#ef4444,#f59e0b)}
+  .bullet{position:absolute;width:6px;height:6px;border-radius:50%;background:#60a5fa}
+  .bullet.frost{background:#a5f3fc}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .panel{border:1px solid var(--line);border-radius:10px;padding:8px;background:#0b1220}
+  .kv{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line);color:var(--mut)}
+  .list{max-height:180px;overflow:auto;border:1px dashed var(--line);border-radius:8px;padding:6px;background:#0b1220}
+  .inv{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{border:1px solid var(--line);padding:6px 8px;border-radius:999px;background:#0b1220;color:var(--mut)}
+  .highlight{outline:2px solid var(--pri)}
+  .note{color:#93c5fd}
+  .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--pri);color:#001b2a;padding:8px 12px;border-radius:10px;font-weight:800;z-index:9999}
+  #overlay{position:fixed;inset:0;background:rgba(2,6,23,.9);display:flex;align-items:center;justify-content:center;z-index:9998}
+  #overlay .box{max-width:760px;background:#0f172a;border:1px solid #334155;border-radius:16px;padding:14px;text-align:center}
+</style>
+</head>
+<body>
+<div id="overlay">
+  <div class="box">
+    <h2>เริ่มอัตโนมัติ</h2>
+    <p class="note">โหมดผู้ชมไฟล์แนบใน iPhone บางครั้งบล็อกการกดปุ่ม ผมตั้งให้เริ่มเวฟและวางป้อมให้เองโดยไม่ต้องแตะอะไร</p>
+    <div class="row" style="justify-content:center">
+      <button id="ovrGo" class="btn">เริ่มทันที</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="row">
+      <div class="title">TONY TD — Full v1.3</div>
+      <button id="btnStart" class="btn small">▶ เริ่ม Wave</button>
+      <button id="btnPause" class="btn small ghost">⏸ Pause</button>
+      <button id="btnSpeed" class="btn small ghost">⏩ 1x</button>
+      <button id="btnReset" class="btn small ghost">🗑️ รีเซ็ต</button>
+      <div class="badge">HP: <b id="hp">20</b></div>
+      <div class="badge">ทอง: <b id="gold">180</b></div>
+      <div class="badge">Wave: <b id="wave">1</b></div>
+    </div>
+    <div class="row">
+      <select id="selTower">
+        <option value="gun">ป้อมปืน (50G)</option>
+        <option value="sniper">สไนเปอร์ (80G)</option>
+        <option value="frost">ฟรอสต์สโลว์ (60G)</option>
+      </select>
+      <button id="btnPlace" class="btn small">วางป้อม</button>
+      <button id="btnSell" class="btn small ghost">ขายป้อม (+60%)</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3 class="section">สนามรบ</h3>
+      <div id="world"></div>
+      <div class="note" style="margin-top:6px">เวอร์ชันนี้จะ "เริ่มเอง" ภายใน ~1 วินาที แม้ไม่ได้แตะ</div>
+    </div>
+
+    <div class="card">
+      <div class="panel" style="margin-bottom:8px">
+        <h3 class="section" style="margin:0 0 6px 0">ป้อมที่เลือก</h3>
+        <div id="selInfo" class="list" style="max-height:120px"></div>
+        <div class="row">
+          <button id="btnUpDmg" class="btn small ghost">อัป DMG (ชิ้นส่วน 5)</button>
+          <button id="btnUpRng" class="btn small ghost">อัป ระยะ (ชิ้นส่วน 5)</button>
+          <button id="btnUpRof" class="btn small ghost">อัป ยิงเร็ว (เหรียญ 5)</button>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:8px">
+        <h3 class="section" style="margin:0 0 6px 0">กระเป๋า</h3>
+        <div id="inv" class="inv"></div>
+        <div class="kv"><span>ชิ้นส่วน</span><b id="mats">0</b></div>
+        <div class="kv"><span>เหรียญโบราณ</span><b id="coins">0</b></div>
+        <div class="kv"><span>คริสตัลหายาก</span><b id="rare">0</b></div>
+      </div>
+
+      <div class="panel" style="margin-bottom:8px">
+        <h3 class="section" style="margin:0 0 6px 0">ตลาดกลาง (จำลอง)</h3>
+        <div id="market" class="list"></div>
+        <div class="row">
+          <select id="sellItem">
+            <option value="mat">ชิ้นส่วน x5</option>
+            <option value="rare">คริสตัล x1</option>
+          </select>
+          <input id="sellPrice" type="number" min="1" value="90" style="width:90px">
+          <button id="btnList" class="btn small">ลงขาย</button>
+        </div>
+        <div class="note">*แนวคิด: เมื่อขายได้ เกมหักค่าธรรมเนียม 10% • เวอร์ชันจริงจะจับคู่ผู้เล่น</div>
+      </div>
+
+      <div class="panel">
+        <h3 class="section" style="margin:0 0 6px 0">ร้าน NPC (ขายทันที)</h3>
+        <div class="kv"><span>ขาย ชิ้นส่วน x5</span><span><b id="priceMat5">70</b>G <button id="npcSellMat" class="btn small" style="margin-left:6px">ขาย</button></span></div>
+        <div class="kv"><span>ขาย เหรียญโบราณ x1</span><span><b id="priceCoin1">20</b>G <button id="npcSellCoin" class="btn small" style="margin-left:6px">ขาย</button></span></div>
+        <div class="kv"><span>ขาย คริสตัลหายาก x1</span><span><b id="priceRare1">200</b>G <button id="npcSellRare" class="btn small" style="margin-left:6px">ขาย</button></span></div>
+        <div class="note">ขายให้ NPC ได้ทันที (สภาพคล่องสูง) • ราคาอาจต่ำกว่าตลาดกลาง</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id); const world=$("world");
+  const RAF=window.requestAnimationFrame||(fn=>setTimeout(()=>fn(performance.now()),16));
+  function el(tag,cls){const d=document.createElement(tag); if(cls) d.className=cls; return d;}
+  function tip(s){const d=el('div','toast'); d.textContent=s; document.body.appendChild(d); setTimeout(()=>d.remove(),1200);}
+  function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+  function dist(ax,ay,bx,by){return Math.hypot(ax-bx, ay-by);}
+
+  const PRICES={sell:{mat5:70,coin1:20,rare1:200}};
+  const S={baseHP:20,gold:180,wave:1,speed:1,running:false,paused:false,last:0,tiles:[],path:[],start:null,goal:null,towers:[],enemies:[],bullets:[],mats:0,coins:0,rare:0,listings:[],selected:null,mode:null};
+  const ui={hp:$("hp"),gold:$("gold"),wave:$("wave"),selInfo:$("selInfo"),inv:$("inv"),mats:$("mats"),coins:$("coins"),rare:$("rare"),market:$("market")};
+
+  const GRID={rows:9,cols:16,size:46,off:6};
+  function buildMap(){world.innerHTML=''; S.tiles=[]; S.path=[]; for(let r=0;r<GRID.rows;r++){for(let c=0;c<GRID.cols;c++){const t=el('div','tile build'); t.style.left=(c*GRID.size+GRID.off)+'px'; t.style.top=(r*GRID.size+GRID.off)+'px'; world.appendChild(t); S.tiles.push({el:t,r,c,type:'build'});}}
+    const p=[[4,0],[4,1],[4,2],[4,3],[3,3],[2,3],[2,4],[2,5],[3,5],[4,5],[5,5],[6,5],[6,6],[6,7],[5,7],[4,7],[3,7],[3,8],[3,9],[4,9],[5,9],[6,9],[7,9],[7,10],[7,11],[6,11],[5,11],[4,11],[3,11],[2,11],[2,12],[2,13],[3,13],[4,13],[5,13],[5,14],[5,15]];
+    for(const [r,c] of p){const idx=r*GRID.cols+c; const tile=S.tiles[idx]; tile.type='path'; tile.el.classList.remove('build'); tile.el.classList.add('path'); S.path.push({x:c*GRID.size+GRID.off+GRID.size/2, y:r*GRID.size+GRID.off+GRID.size/2});}
+    const goal=S.path[S.path.length-1]; const base=el('div','base'); base.style.left=(goal.x-21)+'px'; base.style.top=(goal.y-21)+'px'; world.appendChild(base); S.start=S.path[0]; S.goal=goal; }
+
+  const DEF_TOWER={gun:{name:'ป้อมปืน',cost:50,dmg:6,rng:120,rof:1.6,aa:true,slow:0}, sniper:{name:'สไนเปอร์',cost:80,dmg:22,rng:240,rof:0.55,aa:true,slow:0}, frost:{name:'ฟรอสต์',cost:60,dmg:5,rng:130,rof:1.0,aa:false,slow:0.45}};
+  function placeTower(kind,r,c){const def=DEF_TOWER[kind]; if(S.gold<def.cost){tip('ทองไม่พอ');return;} const tile=S.tiles[r*GRID.cols+c]; if(tile.type!=='build'){tip('วางได้บนช่อง Build');return;} for(const t of S.towers){if(t.r===r&&t.c===c){tip('มีป้อมอยู่แล้ว');return;}} S.gold-=def.cost; upd(); const d=el('div','tower '+(kind==='sniper'?'sniper':kind==='frost'?'frost':'')); d.style.left=(tile.el.offsetLeft+10)+'px'; d.style.top=(tile.el.offsetTop+10)+'px'; world.appendChild(d); const tow={el:d,kind,r,c,x:tile.el.offsetLeft+GRID.size/2,y:tile.el.offsetTop+GRID.size/2,dmg:def.dmg,rng:def.rng,rof:def.rof,aa:def.aa,slow:def.slow,cd:0,lv:1,invested:def.cost}; d.addEventListener('click',(e)=>{e.stopPropagation(); selectTower(tow);}); d.addEventListener('touchend',(e)=>{e.preventDefault(); e.stopPropagation(); selectTower(tow);},{passive:false}); S.towers.push(tow); selectTower(tow);}
+  function selectTower(t){if(S.selected&&S.selected.el) S.selected.el.classList.remove('highlight'); S.selected=t; if(t&&t.el) t.el.classList.add('highlight'); renderSelected();}
+  function sellSelected(){const t=S.selected; if(!t){tip('ยังไม่เลือกป้อม');return;} const refund=Math.floor(t.invested*0.6); S.gold+=refund; t.el.remove(); S.towers=S.towers.filter(x=>x!==t); selectTower(null); upd(); tip('ขายป้อม +'+refund+'G');}
+  function renderSelected(){const box=ui.selInfo; box.innerHTML=''; const t=S.selected; if(!t){box.innerHTML='<div class="note">แตะป้อมเพื่อดูรายละเอียด</div>'; return;} const def=DEF_TOWER[t.kind]; box.innerHTML=`<div class="kv"><span>ชนิด</span><b>${def.name}</b></div><div class="kv"><span>LV</span><b>${t.lv}</b></div><div class="kv"><span>DMG</span><b>${t.dmg.toFixed(1)}</b></div><div class="kv"><span>Range</span><b>${Math.round(t.rng)}</b></div><div class="kv"><span>ROF</span><b>${t.rof.toFixed(2)}/s</b></div><div class="note">ฟรอสต์ชะลอศัตรู, สไนเปอร์ยิงไกลแรง, ป้อมปืนสมดุล</div>`;}
+  function upgradeSelected(stat){const t=S.selected; if(!t){tip('ยังไม่เลือกป้อม');return;} if(stat==='dmg'){ if(S.mats<5){tip('ชิ้นส่วนไม่พอ');return;} S.mats-=5; t.dmg*=1.25; t.lv++; tip('อัป DMG +25%'); } else if(stat==='rng'){ if(S.mats<5){tip('ชิ้นส่วนไม่พอ');return;} S.mats-=5; t.rng*=1.15; t.lv++; tip('อัป ระยะ +15%'); } else if(stat==='rof'){ if(S.coins<5){tip('เหรียญไม่พอ');return;} S.coins-=5; t.rof*=1.15; t.lv++; tip('อัป ยิงเร็ว +15%'); } renderSelected(); upd(); }
+
+  const DEF_ENEMY={runner:w=>({hp:12+w*1,spd:85,tag:'ground',cls:''}), brute:w=>({hp:42+w*5,spd:45,tag:'ground',cls:'brute'}), flyer:w=>({hp:16+w*2,spd:78,tag:'air',cls:'fly'}), boss:w=>({hp:320+w*36,spd:55,tag:'ground',cls:'boss'})};
+  function spawnEnemy(kind){const def=DEF_ENEMY[kind](S.wave); const eEl=el('div','enemy '+def.cls); world.appendChild(eEl); const e={el:eEl,kind,hp:def.hp,max:def.hp,spd:def.spd,tag:def.tag,idx:0,x:S.start.x-10,y:S.start.y-10,alive:true,slow:1,slowT:0,worth: 6+Math.floor(S.wave/2)}; eEl.style.left=e.x+'px'; eEl.style.top=e.y+'px'; S.enemies.push(e);}
+
+  function shoot(t,e){const b=el('div','bullet'+(t.slow>0?' frost':'')); world.appendChild(b); S.bullets.push({el:b,x:t.x,y:t.y,target:e,dmg:t.dmg,speed:300,slow:t.slow,slowDur:1600});}
+  function towerStep(t,dt){t.cd-=dt*S.speed; if(t.cd>0) return; let best=null, bestD=1e9; for(const e of S.enemies){ if(!e.alive) continue; if(e.tag==='air'&&!t.aa) continue; const d=dist(t.x,t.y, e.x+10, e.y+10); if(d<t.rng && d<bestD){ bestD=d; best=e; } } if(best){ shoot(t,best); t.cd = 1000/Math.max(0.1,t.rof); } }
+  function enemyStep(e,dt){ if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slow=1; } const target=S.path[e.idx+1]; if(!target){ e.alive=false; e.el.remove(); S.baseHP=clamp(S.baseHP-1,0,99); upd(); if(S.baseHP<=0) gameOver(); return; } const cx=e.x+10, cy=e.y+10; const ang=Math.atan2(target.y-cy, target.x-cx); const sp=e.spd*e.slow*(dt/1000)*S.speed; e.x+=Math.cos(ang)*sp; e.y+=Math.sin(ang)*sp; e.el.style.left=e.x+'px'; e.el.style.top=e.y+'px'; if(dist(cx,cy,target.x,target.y)<6) e.idx++; }
+  function bulletStep(p,dt){ if(!p.target||!p.target.alive){ p.dead=true; p.el.remove(); return; } const dx=(p.target.x+10)-p.x, dy=(p.target.y+10)-p.y; const d=Math.hypot(dx,dy); const sp=p.speed*(dt/1000)*S.speed; p.x+=dx/d*sp; p.y+=dy/d*sp; p.el.style.left=p.x+'px'; p.el.style.top=p.y+'px'; if(d<8){ p.target.hp-=p.dmg; if(p.slow>0 && p.target.tag!=='air'){ p.target.slow=Math.max(0.35, p.target.slow*(1*p.slow)); p.target.slowT=p.slowDur/1000; } if(p.target.hp<=0) killEnemy(p.target); p.dead=true; p.el.remove(); } }
+  function killEnemy(e){ e.alive=false; e.el.remove(); const bonus=(e.kind==='boss'?60:(e.kind==='brute'?8:0)); S.gold += 6 + Math.floor(S.wave/2) + bonus; const roll=Math.random(); if(e.kind==='boss'){ S.rare+=1; addInv('คริสตัลหายาก'); } else if(roll<0.55){ S.mats+=1; addInv('ชิ้นส่วน'); } else if(roll<0.85){ S.coins+=1; addInv('เหรียญโบราณ'); } else if(Math.random()<0.2){ S.rare+=1; addInv('คริสตัลหายาก'); } upd(); }
+
+  function startWave(){ if(S.running){ tip('กำลังต่อสู้'); return; } S.running=true; tip('Wave '+S.wave); let pack=[]; const n=S.wave; if(n%5===0){ pack = Array(8).fill('runner').concat(Array(4).fill('brute')).concat(['boss']); } else { pack = Array(6+Math.floor(n*0.7)).fill('runner'); if(n>2) pack=pack.concat(Array(Math.max(1,Math.floor(n/3))).fill('brute')); if(n>3) pack=pack.concat(Array(Math.max(1,Math.floor(n/4))).fill('flyer')); }
+    let i=0; const iv=setInterval(()=>{ spawnEnemy(pack[i]); i++; if(i>=pack.length){ clearInterval(iv); setTimeout(()=>{ if(S.baseHP>0){ S.running=false; S.wave++; S.gold+=24; upd(); tip('เคลียร์เวฟ +24G'); } }, 1400); } }, Math.max(220, 520 - S.wave*18)/S.speed);
+  }
+
+  function addInv(name){ const d=el('div','tag'); d.textContent=name; ui.inv.appendChild(d); if(ui.inv.childNodes.length>40) ui.inv.removeChild(ui.inv.firstChild); }
+  function renderMarket(){ const box=ui.market; box.innerHTML=''; if(!S.listings.length){ box.innerHTML='<div class="note">ยังไม่มีประกาศขาย ลองลงขายสิ่งของจากกระเป๋า</div>'; return; } S.listings.forEach((it,idx)=>{ const row=el('div'); row.className='kv'; row.innerHTML=`<span>${it.name} x${it.qty}</span><b>${it.price}G</b>`; const buy=el('button','btn small'); buy.textContent='ซื้อ'; buy.style.marginLeft='8px'; buy.addEventListener('click',()=>{ if(S.gold<it.price){ tip('ทองไม่พอ'); return; } S.gold-=it.price; if(it.name==='ชิ้นส่วน') S.mats+=it.qty; if(it.name==='คริสตัลหายาก') S.rare+=it.qty; if(it.name==='เหรียญโบราณ') S.coins+=it.qty; S.listings.splice(idx,1); upd(); tip('ซื้อสำเร็จ'); }); row.appendChild(buy); box.appendChild(row); }); }
+
+  function npcSell(kind){ if(kind==='mat5'){ if(S.mats<5){ tip('ชิ้นส่วนไม่พอ (≥5)'); return; } S.mats-=5; S.gold+=PRICES.sell.mat5; tip('ขายชิ้นส่วน x5 ให้ NPC +'+PRICES.sell.mat5+'G'); } else if(kind==='coin1'){ if(S.coins<1){ tip('ไม่มีเหรียญโบราณ'); return; } S.coins-=1; S.gold+=PRICES.sell.coin1; tip('ขายเหรียญโบราณ x1 ให้ NPC +'+PRICES.sell.coin1+'G'); } else if(kind==='rare1'){ if(S.rare<1){ tip('ไม่มีคริสตัล'); return; } S.rare-=1; S.gold+=PRICES.sell.rare1; tip('ขายคริสตัลหายาก x1 ให้ NPC +'+PRICES.sell.rare1+'G'); } upd(); }
+
+  function upd(){ ui.hp.textContent=S.baseHP; ui.gold.textContent=S.gold; ui.wave.textContent=S.wave; ui.mats.textContent=S.mats; ui.coins.textContent=S.coins; ui.rare.textContent=S.rare; renderMarket(); }
+  function gameOver(){ S.paused=true; S.running=false; tip('ฐานแตก! กด รีเซ็ต'); }
+
+  function loop(ts){ if(!S.last) S.last=ts; const dt=ts-S.last; S.last=ts; if(!S.paused){ for(const e of S.enemies){ if(e.alive) enemyStep(e,dt); } for(const t of S.towers){ towerStep(t,dt); } for(const b of S.bullets){ bulletStep(b,dt); } S.enemies=S.enemies.filter(e=>e.alive); S.bullets=S.bullets.filter(b=>!b.dead); } RAF(loop); }
+
+  // Buttons (click + touch)
+  function bind(el,fn){ el.addEventListener('click',fn); el.addEventListener('touchstart',e=>{ e.preventDefault(); fn(); }, {passive:false}); }
+  bind($("btnStart"), startWave); bind($("btnPause"), ()=>{ S.paused=!S.paused; $("btnPause").textContent=S.paused?'▶ Resume':'⏸ Pause'; }); bind($("btnSpeed"), ()=>{ S.speed=(S.speed===1?2:S.speed===2?3:1); $("btnSpeed").textContent='⏩ '+S.speed+'x'; }); bind($("btnReset"), ()=>init(true)); bind($("btnPlace"), ()=>{ S.mode='place'; tip('แตะช่อง Build เพื่อวางป้อม'); }); bind($("btnSell"), sellSelected); bind($("btnUpDmg"), ()=>upgradeSelected('dmg')); bind($("btnUpRng"), ()=>upgradeSelected('rng')); bind($("btnUpRof"), ()=>upgradeSelected('rof'));
+
+  world.addEventListener('click',(e)=>{ if(e.target.closest('.tower')) return; const rect=world.getBoundingClientRect(); const x=e.clientX-rect.left, y=e.clientY-rect.top; const r=Math.floor((y-GRID.off)/GRID.size), c=Math.floor((x-GRID.off)/GRID.size); if(r<0||c<0||r>=GRID.rows||c>=GRID.cols) return; const tile=S.tiles[r*GRID.cols+c]; if(S.mode==='place'){ const k=$("selTower").value; placeTower(k,r,c); S.mode=null; } else { if(tile.type==='build') selectTower(null); } });
+  world.addEventListener('touchstart',(e)=>{ if(e.target.closest('.tower')) return; const t=e.touches[0]; const rect=world.getBoundingClientRect(); const x=t.clientX-rect.left, y=t.clientY-rect.top; const r=Math.floor((y-GRID.off)/GRID.size), c=Math.floor((x-GRID.off)/GRID.size); if(r<0||c<0||r>=GRID.rows||c>=GRID.cols) return; const tile=S.tiles[r*GRID.cols+c]; if(S.mode==='place'){ const k=$("selTower").value; placeTower(k,r,c); S.mode=null; } else { if(tile.type==='build') selectTower(null); } }, {passive:false});
+
+  $("btnList").addEventListener('click',()=>{ const type=$("sellItem").value; const price=Math.max(1, parseInt($("sellPrice").value||'0')); if(type==='mat'){ if(S.mats<5){ tip('ชิ้นส่วนไม่พอ (≥5)'); return; } S.mats-=5; S.listings.push({name:'ชิ้นส่วน', qty:5, price}); } else { if(S.rare<1){ tip('ไม่มีคริสตัล'); return; } S.rare-=1; S.listings.push({name:'คริสตัลหายาก', qty:1, price}); } upd(); tip('ลงประกาศขายแล้ว'); });
+  bind($("npcSellMat"), ()=>npcSell('mat5')); bind($("npcSellCoin"), ()=>npcSell('coin1')); bind($("npcSellRare"), ()=>npcSell('rare1'));
+
+  function init(reset){ if(reset){ Object.assign(S,{baseHP:20,gold:180,wave:1,speed:1,running:false,paused:false,last:0,towers:[],enemies:[],bullets:[],mats:0,coins:0,rare:0,listings:[],selected:null,mode:null}); } buildMap(); upd(); selectTower(null); }
+  init(true); RAF(loop);
+
+  // ===== AutoStart for iPhone attachment viewers =====
+  function demo(){ document.getElementById('overlay').style.display='none'; placeTower('gun',3,2); placeTower('frost',5,6); setTimeout(startWave, 400); }
+  // 1) pageshow/visibilitychange often fire in viewers even when click is blocked
+  window.addEventListener('pageshow', ()=> setTimeout(demo, 600), {once:true});
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ setTimeout(demo, 800); } }, {once:true});
+  // 2) Fallback: start after 1.2s regardless
+  setTimeout(demo, 1200);
+  // 3) Button for real browsers
+  const ovrBtn=$("ovrGo"); ovrBtn.addEventListener('click', demo); ovrBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); demo(); }, {passive:false});
+})();
+</script>
+</body>
+</html>
