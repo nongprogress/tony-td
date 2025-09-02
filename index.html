@@ -1,580 +1,585 @@
-<!doctype html>
-<html lang="th">
+@@ -3,64 +3,50 @@
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TONY TD — v1.6 Variety Update</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>TONY TD — Full v1.3 (iPhone Viewer AutoStart)</title>
+<title>TONY TD — Canvas v1.0</title>
 <style>
   :root{--bg:#0b1220;--ink:#e2e8f0;--mut:#94a3b8;--card:#0f172a;--line:#334155;--pri:#22d3ee;--acc:#60a5fa;--ok:#22c55e;--bad:#ef4444;--gold:#facc15}
-  *{box-sizing:border-box}
-  html,body{height:100%; margin:0; overflow:hidden; background:var(--bg);}
-  body{color:var(--ink);font:14px system-ui,Inter,Segoe UI,Roboto;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-  .game-container{width:100vw;height:100vh;display:flex;flex-direction:column;position:relative}
-  #world{width:100%;flex-grow:1;position:relative;overflow:hidden;touch-action:manipulation;cursor:crosshair;background-size:cover;background-position:center}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;padding:0;overscroll-behavior:none}
+  body{background:var(--bg);color:var(--ink);font:14px system-ui,Inter,Segoe UI,Roboto;-webkit-font-smoothing:antialiased;-webkit-user-select:none;-webkit-touch-callout:none}
+  html,body{height:100%;margin:0;padding:0;overscroll-behavior:none;background:var(--bg);color:var(--ink);font:14px system-ui,Inter,Segoe UI,Roboto;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:8px auto;padding:10px}
+  .header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .title{font-size:18px;font-weight:800}
+  .btn{background:var(--pri);color:#001b2a;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;touch-action:manipulation}
+  .btn{background:var(--pri);color:#001b2a;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+  .btn.small{padding:8px 12px}
+  .badge{border:1px solid var(--line);padding:6px 10px;border-radius:10px;color:var(--mut);display:flex;gap:6px;align-items:center}
+  .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+  .section{margin:0 0 8px 0;font-weight:800}
+  #world{position:relative;height:520px;border:1px solid var(--line);border-radius:12px;background:#0a0f1a;overflow:hidden;touch-action:none}
   .tile{position:absolute;width:46px;height:46px;border-radius:8px}
-  .tile.path{background:rgba(11,30,52,0.65);border:1px solid #10335d}
-  .tile.build{background:rgba(12,20,36,0.55);border:1px dashed #1f3861}
+  .tile.path{background:#0b1e34;border:1px solid #10335d}
+  .tile.build{background:#0c1424;border:1px dashed #1f3861}
   .base{position:absolute;width:42px;height:42px;border-radius:10px;background:#1f2937;border:2px solid #94a3b8}
-  #hud{position:absolute;inset:0;pointer-events:none;padding:8px;display:flex;flex-direction:column;justify-content:space-between}
-  .hud-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;pointer-events:auto}
-  .hud-row.top{justify-content:flex-start}
-  .hud-row.bottom{justify-content:center}
-  @media (orientation: landscape) and (min-height: 400px) {
-    #hud{flex-direction:row}
-    .hud-row.bottom{flex-direction:column;justify-content:flex-start;max-width:220px}
-  }
-  .btn{background:var(--pri);color:#001b2a;border:0;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer;transition:transform .1s, background-color .2s}
-  .btn:hover{transform:translateY(-1px)}
-  .btn.ghost{background:rgba(15,23,42,0.8);border:1px solid var(--line);color:var(--ink)}
-  .btn.small{padding:6px 10px}
-  .btn.warn{background:#f59e0b;color:#0b1220}
-  .btn.spell{background:#ef4444;color:#fff}
-  .badge{background:rgba(15,23,42,0.85);border:1px solid var(--line);padding:6px 10px;border-radius:10px;color:var(--mut);display:flex;gap:6px;align-items:center}
-  .sprite{position:absolute;background-size:contain;background-position:center;background-repeat:no-repeat}
-  .tower.sprite{width:40px;height:40px}
-  .enemy.sprite{width:28px;height:28px}
-  .health-bar{position:absolute;top:-8px;left:0;width:100%;height:4px;background:#450a0a;border-radius:2px}
-  .health-bar-inner{height:100%;background:#dc2626;border-radius:2px;transition:width .2s}
+  .tower{position:absolute;width:26px;height:26px;border-radius:6px;border:2px solid #0b3b2a;background:#22c55e}
+  .tower.sniper{background:#38bdf8;border-color:#075985}
+  .tower.frost{background:#a5f3fc;border-color:#155e75}
+  .enemy{position:absolute;width:20px;height:20px;border-radius:6px;background:#ef4444}
+  .enemy.fly{background:#f97316}
+  .enemy.brute{background:#8b5cf6}
+  .enemy.boss{background:linear-gradient(145deg,#ef4444,#f59e0b)}
   .bullet{position:absolute;width:6px;height:6px;border-radius:50%;background:#60a5fa}
   .bullet.frost{background:#a5f3fc}
-  .bullet.missile{width:10px;height:10px;background:#fb923c;border-radius:4px}
-  .explosion{position:absolute;width:60px;height:60px;border-radius:50%;background:rgba(251,146,60,.7);transform:scale(0);animation:explode .3s ease-out}
-  @keyframes explode{0%{transform:scale(0);opacity:1}100%{transform:scale(1);opacity:0}}
-  .meteor-impact{position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(239,68,68,.8);transform:scale(0);animation:explode .4s ease-out}
-  .range-indicator{position:absolute;border:2px dashed var(--pri);border-radius:50%;pointer-events:none;opacity:0.6;transition:all .2s}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .panel{border:1px solid var(--line);border-radius:10px;padding:8px;background:#0b1220;margin-bottom:8px}
+  #stageWrap{position:relative}
+  #stage{display:block;border:1px solid var(--line);border-radius:12px;background:#0a0f1a;touch-action:none}
+  .panel{border:1px solid var(--line);border-radius:10px;padding:8px;background:#0b1220}
   .kv{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--line);color:var(--mut)}
   .list{max-height:180px;overflow:auto;border:1px dashed var(--line);border-radius:8px;padding:6px;background:#0b1220}
   .inv{display:flex;gap:6px;flex-wrap:wrap}
   .tag{border:1px solid var(--line);padding:6px 8px;border-radius:999px;background:#0b1220;color:var(--mut)}
-  .highlight{outline:3px solid var(--pri);box-shadow:0 0 15px var(--pri)}
-  .note{color:#93c5fd;font-size:12px}
+  .highlight{outline:2px solid var(--pri)}
+  .note{color:#93c5fd}
   .toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--pri);color:#001b2a;padding:8px 12px;border-radius:10px;font-weight:800;z-index:9999}
-  /* Modal generic */
-  .modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
-  .modal.show{opacity:1;visibility:visible}
-  .modal .backdrop{position:absolute;inset:0;background:rgba(2,6,23,.8);backdrop-filter:blur(3px)}
-  .modal .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;width:92%;max-width:460px;max-height:85vh;overflow:auto}
-  .modal h3{margin:0 0 6px 0}
+  #overlay{position:fixed;inset:0;background:rgba(2,6,23,.9);display:flex;align-items:center;justify-content:center;z-index:9998}
+  #overlay .box{max-width:760px;background:#0f172a;border:1px solid #334155;border-radius:16px;padding:14px;text-align:center}
+  select,input{background:#0b1220;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
 </style>
 </head>
 <body>
-<div class="game-container">
-  <div id="world"></div>
-  <div id="hud">
-    <div class="hud-row top">
-      <div class="badge">Stage: <b id="stage">1</b></div>
-      <div class="badge">Wave: <b id="wave">1</b></div>
-      <div class="badge">HP: <b id="hp">20</b></div>
-      <div class="badge">ทอง: <b id="gold">180</b></div>
+<div id="overlay">
+  <div class="box">
+    <h2>เริ่มอัตโนมัติ</h2>
+    <p class="note">โหมดผู้ชมไฟล์แนบใน iPhone บางครั้งบล็อกการกดปุ่ม ผมตั้งให้เริ่มเวฟและวางป้อมให้เองโดยไม่ต้องแตะอะไร</p>
+    <div class="row" style="justify-content:center">
+    <h2>เริ่มอัตโนมัติ (Canvas)</h2>
+    <p class="note">โหมดผู้ชมไฟล์แนบใน iPhone บางครั้งบล็อกการกดปุ่ม เวอร์ชันนี้จะเริ่มเวฟและวางป้อมให้อัตโนมัติ</p>
+    <div class="row" style="display:flex;gap:8px;justify-content:center">
+      <button id="ovrGo" class="btn">เริ่มทันที</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="row">
+      <div class="title">TONY TD — Full v1.3</div>
+    <div class="row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="title">TONY TD — Canvas v1.0</div>
       <button id="btnStart" class="btn small">▶ เริ่ม Wave</button>
       <button id="btnPause" class="btn small ghost">⏸ Pause</button>
-      <button id="btnShop" class="btn small warn">🛒 Shop</button>
-      <button id="btnResearch" class="btn small ghost">🔬 Research</button>
+      <button id="btnSpeed" class="btn small ghost">⏩ 1x</button>
+@@ -69,7 +55,7 @@ <h2>เริ่มอัตโนมัติ</h2>
+      <div class="badge">ทอง: <b id="gold">180</b></div>
+      <div class="badge">Wave: <b id="wave">1</b></div>
     </div>
-    <div class="hud-row bottom">
+    <div class="row">
+    <div class="row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="selTower">
         <option value="gun">ป้อมปืน (50G)</option>
         <option value="sniper">สไนเปอร์ (80G)</option>
-        <option value="frost">ฟรอสต์สโลว์ (60G)</option>
-        <option value="missile">ป้อมจรวด (100G)</option>
-      </select>
-      <button id="btnPlace" class="btn small">วางป้อม</button>
-      <button id="btnSell" class="btn small ghost">ขาย (+60%)</button>
-      <button id="btnMeteor" class="btn small spell">☄️ Meteor (120G)</button>
-    </div>
-  </div>
-</div>
+@@ -82,16 +68,18 @@ <h2>เริ่มอัตโนมัติ</h2>
 
-<!-- SHOP MODAL -->
-<div id="shop" class="modal">
-  <div class="backdrop"></div>
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <h3>🛒 Item Shop</h3>
-      <button class="btn small ghost" id="shopClose">ปิด</button>
-    </div>
-    <div class="panel">
-      <div class="kv"><span>💣 Bomb (60G)</span><span><button class="btn small" id="buyBomb">ซื้อ</button></span></div>
-      <div class="kv"><span>❄️ Freeze (70G)</span><span><button class="btn small" id="buyFreeze">ซื้อ</button></span></div>
-      <div class="kv"><span>⚙️ Overclock (90G)</span><span><button class="btn small" id="buyOC">ซื้อ</button></span></div>
-      <div class="kv"><span>🔁 Reroll Items (15G)</span><span><button class="btn small ghost" id="reroll">Reroll</button></span></div>
-    </div>
-    <div class="panel">
-      <h3 class="section" style="margin:0 0 6px 0">ไอเทมที่มี</h3>
-      <div id="bag" class="inv"></div>
-      <div class="note">วิธีใช้: Bomb/Freeze แตะพื้นที่สนาม • Overclock ใช้ทันที (บัฟป้อมทั้งหมดชั่วคราว)</div>
-    </div>
-  </div>
-</div>
-
-<!-- RESEARCH MODAL -->
-<div id="lab" class="modal">
-  <div class="backdrop"></div>
-  <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <h3>🔬 Research Lab</h3>
-      <button class="btn small ghost" id="labClose">ปิด</button>
-    </div>
-    <div class="panel">
-      <div class="kv"><span>Ballistics I: +10% DMG (120G)</span><span><button class="btn small" data-r="ball1">วิจัย</button></span></div>
-      <div class="kv"><span>Ballistics II: +10% DMG (220G)</span><span><button class="btn small" data-r="ball2">วิจัย</button></span></div>
-      <div class="kv"><span>Finance I: +2G/100G ดอกเบี้ย (100G)</span><span><button class="btn small" data-r="fin1">วิจัย</button></span></div>
-      <div class="kv"><span>Finance II: +3G/100G ดอกเบี้ย (200G)</span><span><button class="btn small" data-r="fin2">วิจัย</button></span></div>
-      <div class="kv"><span>Arcana I: Meteor +20 DMG (120G)</span><span><button class="btn small" data-r="arc1">วิจัย</button></span></div>
-      <div class="kv"><span>Arcana II: Meteor +30 DMG (240G)</span><span><button class="btn small" data-r="arc2">วิจัย</button></span></div>
-    </div>
-    <div class="panel">
-      <div class="note">วิจัยจะมีผลทันทีและอยู่ตลอดจนจบเกมรอบนี้</div>
-    </div>
-  </div>
-</div>
-
-<!-- OVERLAY: START -->
-<div id="overlay" class="modal show">
-  <div class="backdrop"></div>
-  <div class="card">
-    <h3>TONY TD — Variety Update</h3>
-    <div class="panel">
-      <div class="kv"><span>ความยาก</span>
-        <span>
-          <select id="selDiff">
-            <option value="easy">Easy</option>
-            <option value="normal" selected>Normal</option>
-            <option value="hard">Hard</option>
-          </select>
-        </span>
+  <div class="grid">
+    <div class="card">
+      <h3 class="section">สนามรบ</h3>
+      <div id="world"></div>
+      <h3 class="section">สนามรบ (Canvas)</h3>
+      <div id="stageWrap">
+        <canvas id="stage" width="760" height="460"></canvas>
       </div>
-      <div class="kv"><span>Endless Mode</span>
-        <span><label><input type="checkbox" id="chkEndless"> เปิด</label></span>
-      </div>
-      <div class="note">* Endless จะวน Stage ไปเรื่อย ๆ พร้อมเพิ่มความยากทีละน้อย</div>
+      <div class="note" style="margin-top:6px">เวอร์ชันนี้จะ "เริ่มเอง" ภายใน ~1 วินาที แม้ไม่ได้แตะ</div>
     </div>
-    <div class="row" style="justify-content:center">
-      <button id="ovrGo" class="btn">เริ่มเกม</button>
+
+    <div class="card">
+      <div class="panel" style="margin-bottom:8px">
+        <h3 class="section" style="margin:0 0 6px 0">ป้อมที่เลือก</h3>
+        <div id="selInfo" class="list" style="max-height:120px"></div>
+        <div class="row">
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="btnUpDmg" class="btn small ghost">อัป DMG (ชิ้นส่วน 5)</button>
+          <button id="btnUpRng" class="btn small ghost">อัป ระยะ (ชิ้นส่วน 5)</button>
+          <button id="btnUpRof" class="btn small ghost">อัป ยิงเร็ว (เหรียญ 5)</button>
+@@ -109,7 +97,7 @@ <h3 class="section" style="margin:0 0 6px 0">กระเป๋า</h3>
+      <div class="panel" style="margin-bottom:8px">
+        <h3 class="section" style="margin:0 0 6px 0">ตลาดกลาง (จำลอง)</h3>
+        <div id="market" class="list"></div>
+        <div class="row">
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="sellItem">
+            <option value="mat">ชิ้นส่วน x5</option>
+            <option value="rare">คริสตัล x1</option>
+@@ -127,82 +115,428 @@ <h3 class="section" style="margin:0 0 6px 0">ร้าน NPC (ขายทั
+        <div class="kv"><span>ขาย คริสตัลหายาก x1</span><span><b id="priceRare1">200</b>G <button id="npcSellRare" class="btn small" style="margin-left:6px">ขาย</button></span></div>
+        <div class="note">ขายให้ NPC ได้ทันที (สภาพคล่องสูง) • ราคาอาจต่ำกว่าตลาดกลาง</div>
+      </div>
+
     </div>
   </div>
 </div>
 
 <script>
 (function(){
+  const $=id=>document.getElementById(id); const world=$("world");
   const $=id=>document.getElementById(id);
-  const world=$("world");
-  const ui={stage:$("stage"),wave:$("wave"),hp:$("hp"),gold:$("gold"),bag:$("bag")};
-  const RAF=window.requestAnimationFrame||(f=>setTimeout(()=>f(performance.now()),16));
-  function el(t,c){const d=document.createElement(t); if(c) d.className=c; return d;}
+  const canvas=$("stage"), ctx=canvas.getContext('2d');
+  const RAF=window.requestAnimationFrame||(fn=>setTimeout(()=>fn(performance.now()),16));
+  function el(tag,cls){const d=document.createElement(tag); if(cls) d.className=cls; return d;}
   function tip(s){const d=el('div','toast'); d.textContent=s; document.body.appendChild(d); setTimeout(()=>d.remove(),1200);}
-  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-  const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
+  function clamp(n,a,b){return Math.max(a,Math.min(b,n));}
+  function dist(ax,ay,bx,by){return Math.hypot(ax-bx, ay-by);}
 
-  // ---------- Assets (สามารถเปลี่ยน URL เป็นภาพจริงได้) ----------
-  const assets = {
-    tower:{ gun:'https://placehold.co/40x40/22c55e/FFFFFF?text=G', sniper:'https://placehold.co/40x40/38bdf8/FFFFFF?text=S', frost:'https://placehold.co/40x40/a5f3fc/000/fff?text=F', missile:'https://placehold.co/40x40/f97316/FFFFFF?text=M' },
-    enemy:{ runner:'https://placehold.co/28x28/ef4444/fff?text=R', brute:'https://placehold.co/28x28/8b5cf6/fff?text=B', flyer:'https://placehold.co/28x28/f59e0b/000?text=F', bandit:'https://placehold.co/28x28/a16207/fff?text=T', boss:'https://placehold.co/40x40/ef4444/fff?text=BOSS' },
-    bg:{ grass:'https://placehold.co/1200x800/0a0f1a/334155?text=Grassland', desert:'https://placehold.co/1200x800/362b11/facc15?text=Desert', city:'https://placehold.co/1200x800/0c111b/7aa2?text=City' }
-  };
+  const PRICES={sell:{mat5:70,coin1:20,rare1:200}};
+  const S={baseHP:20,gold:180,wave:1,speed:1,running:false,paused:false,last:0,tiles:[],path:[],start:null,goal:null,towers:[],enemies:[],bullets:[],mats:0,coins:0,rare:0,listings:[],selected:null,mode:null};
+  const ui={hp:$("hp"),gold:$("gold"),wave:$("wave"),selInfo:$("selInfo"),inv:$("inv"),mats:$("mats"),coins:$("coins"),rare:$("rare"),market:$("market")};
 
-  // ---------- Game State ----------
+  const GRID={rows:9,cols:16,size:46,off:6};
+  function buildMap(){world.innerHTML=''; S.tiles=[]; S.path=[]; for(let r=0;r<GRID.rows;r++){for(let c=0;c<GRID.cols;c++){const t=el('div','tile build'); t.style.left=(c*GRID.size+GRID.off)+'px'; t.style.top=(r*GRID.size+GRID.off)+'px'; world.appendChild(t); S.tiles.push({el:t,r,c,type:'build'});}}
+    const p=[[4,0],[4,1],[4,2],[4,3],[3,3],[2,3],[2,4],[2,5],[3,5],[4,5],[5,5],[6,5],[6,6],[6,7],[5,7],[4,7],[3,7],[3,8],[3,9],[4,9],[5,9],[6,9],[7,9],[7,10],[7,11],[6,11],[5,11],[4,11],[3,11],[2,11],[2,12],[2,13],[3,13],[4,13],[5,13],[5,14],[5,15]];
+    for(const [r,c] of p){const idx=r*GRID.cols+c; const tile=S.tiles[idx]; tile.type='path'; tile.el.classList.remove('build'); tile.el.classList.add('path'); S.path.push({x:c*GRID.size+GRID.off+GRID.size/2, y:r*GRID.size+GRID.off+GRID.size/2});}
+    const goal=S.path[S.path.length-1]; const base=el('div','base'); base.style.left=(goal.x-21)+'px'; base.style.top=(goal.y-21)+'px'; world.appendChild(base); S.start=S.path[0]; S.goal=goal; }
+  // ---- WORLD/GRID ----
+  const GRID={rows:9, cols:16, size:46, off:6};
+  const W=GRID.cols*GRID.size+GRID.off*2, H=GRID.rows*GRID.size+GRID.off*2;
+  canvas.width=W; canvas.height=H;
+
+  const DEF_TOWER={gun:{name:'ป้อมปืน',cost:50,dmg:6,rng:120,rof:1.6,aa:true,slow:0}, sniper:{name:'สไนเปอร์',cost:80,dmg:22,rng:240,rof:0.55,aa:true,slow:0}, frost:{name:'ฟรอสต์',cost:60,dmg:5,rng:130,rof:1.0,aa:false,slow:0.45}};
+  function placeTower(kind,r,c){const def=DEF_TOWER[kind]; if(S.gold<def.cost){tip('ทองไม่พอ');return;} const tile=S.tiles[r*GRID.cols+c]; if(tile.type!=='build'){tip('วางได้บนช่อง Build');return;} for(const t of S.towers){if(t.r===r&&t.c===c){tip('มีป้อมอยู่แล้ว');return;}} S.gold-=def.cost; upd(); const d=el('div','tower '+(kind==='sniper'?'sniper':kind==='frost'?'frost':'')); d.style.left=(tile.el.offsetLeft+10)+'px'; d.style.top=(tile.el.offsetTop+10)+'px'; world.appendChild(d); const tow={el:d,kind,r,c,x:tile.el.offsetLeft+GRID.size/2,y:tile.el.offsetTop+GRID.size/2,dmg:def.dmg,rng:def.rng,rof:def.rof,aa:def.aa,slow:def.slow,cd:0,lv:1,invested:def.cost}; d.addEventListener('click',(e)=>{e.stopPropagation(); selectTower(tow);}); d.addEventListener('touchend',(e)=>{e.preventDefault(); e.stopPropagation(); selectTower(tow);},{passive:false}); S.towers.push(tow); selectTower(tow);}
+  function selectTower(t){if(S.selected&&S.selected.el) S.selected.el.classList.remove('highlight'); S.selected=t; if(t&&t.el) t.el.classList.add('highlight'); renderSelected();}
+  function sellSelected(){const t=S.selected; if(!t){tip('ยังไม่เลือกป้อม');return;} const refund=Math.floor(t.invested*0.6); S.gold+=refund; t.el.remove(); S.towers=S.towers.filter(x=>x!==t); selectTower(null); upd(); tip('ขายป้อม +'+refund+'G');}
+  function renderSelected(){const box=ui.selInfo; box.innerHTML=''; const t=S.selected; if(!t){box.innerHTML='<div class="note">แตะป้อมเพื่อดูรายละเอียด</div>'; return;} const def=DEF_TOWER[t.kind]; box.innerHTML=`<div class="kv"><span>ชนิด</span><b>${def.name}</b></div><div class="kv"><span>LV</span><b>${t.lv}</b></div><div class="kv"><span>DMG</span><b>${t.dmg.toFixed(1)}</b></div><div class="kv"><span>Range</span><b>${Math.round(t.rng)}</b></div><div class="kv"><span>ROF</span><b>${t.rof.toFixed(2)}/s</b></div><div class="note">ฟรอสต์ชะลอศัตรู, สไนเปอร์ยิงไกลแรง, ป้อมปืนสมดุล</div>`;}
+  function upgradeSelected(stat){const t=S.selected; if(!t){tip('ยังไม่เลือกป้อม');return;} if(stat==='dmg'){ if(S.mats<5){tip('ชิ้นส่วนไม่พอ');return;} S.mats-=5; t.dmg*=1.25; t.lv++; tip('อัป DMG +25%'); } else if(stat==='rng'){ if(S.mats<5){tip('ชิ้นส่วนไม่พอ');return;} S.mats-=5; t.rng*=1.15; t.lv++; tip('อัป ระยะ +15%'); } else if(stat==='rof'){ if(S.coins<5){tip('เหรียญไม่พอ');return;} S.coins-=5; t.rof*=1.15; t.lv++; tip('อัป ยิงเร็ว +15%'); } renderSelected(); upd(); }
   const S={
-    stage:1, wave:1, baseHP:20, gold:180, running:false, paused:false, last:0,
-    tiles:[], path:[], start:null, goal:null, towers:[], enemies:[], bullets:[],
-    selected:null, mode:null, rangeIndicator:null,
-    items:{bomb:0,freeze:0,oc:0}, research:{ball1:false,ball2:false,fin1:false,fin2:false,arc1:false,arc2:false},
-    difficulty:'normal', endless:false, difficultyScale:1.0, // เพิ่มทีละนิดเมื่อวนด่าน
+    baseHP:20,gold:180,wave:1,speed:1,
+    running:false,paused:false,last:0,
+    path:[], start:null, goal:null,
+    towers:[], enemies:[], bullets:[],
+    mats:0, coins:0, rare:0, listings:[],
+    selected:null, mode:null,
+    spawnQ:[], spawnTimer:0, spawnGap:400
   };
 
-  // ---------- Difficulty Config ----------
-  const DIFF={
-    easy:   {hp:22, gold:220, enemyHP:0.9, reward:1.1},
-    normal: {hp:20, gold:180, enemyHP:1.0, reward:1.0},
-    hard:   {hp:18, gold:150, enemyHP:1.15, reward:0.9}
-  };
+  const DEF_ENEMY={runner:w=>({hp:12+w*1,spd:85,tag:'ground',cls:''}), brute:w=>({hp:42+w*5,spd:45,tag:'ground',cls:'brute'}), flyer:w=>({hp:16+w*2,spd:78,tag:'air',cls:'fly'}), boss:w=>({hp:320+w*36,spd:55,tag:'ground',cls:'boss'})};
+  function spawnEnemy(kind){const def=DEF_ENEMY[kind](S.wave); const eEl=el('div','enemy '+def.cls); world.appendChild(eEl); const e={el:eEl,kind,hp:def.hp,max:def.hp,spd:def.spd,tag:def.tag,idx:0,x:S.start.x-10,y:S.start.y-10,alive:true,slow:1,slowT:0,worth: 6+Math.floor(S.wave/2)}; eEl.style.left=e.x+'px'; eEl.style.top=e.y+'px'; S.enemies.push(e);}
+  // ---- MAP & PATH ----
+  const PATH_RC=[[4,0],[4,1],[4,2],[4,3],[3,3],[2,3],[2,4],[2,5],[3,5],[4,5],[5,5],[6,5],[6,6],[6,7],[5,7],[4,7],[3,7],[3,8],[3,9],[4,9],[5,9],[6,9],[7,9],[7,10],[7,11],[6,11],[5,11],[4,11],[3,11],[2,11],[2,12],[2,13],[3,13],[4,13],[5,13],[5,14],[5,15]];
+  function rc2xy(r,c){return {x:c*GRID.size+GRID.off+GRID.size/2, y:r*GRID.size+GRID.off+GRID.size/2};}
+  function buildMap(){
+    S.path = PATH_RC.map(([r,c])=>rc2xy(r,c));
+    S.start = S.path[0]; S.goal = S.path[S.path.length-1];
+  }
 
-  // ---------- Stages: path & modifiers ----------
-  const GRID={rows:9, cols:16, size:46};
-  const STAGES=[
-    { name:'Grass', bg:assets.bg.grass, mod:{flyer:1.0,speed:1.0}, path:[[4,0],[4,1],[4,2],[4,3],[3,3],[2,3],[2,4],[2,5],[3,5],[4,5],[5,5],[6,5],[6,6],[6,7],[5,7],[4,7],[3,7],[3,8],[3,9],[4,9],[5,9],[6,9],[7,9],[7,10],[7,11],[6,11],[5,11],[4,11],[3,11],[2,11],[2,12],[2,13],[3,13],[4,13],[5,13],[5,14],[5,15]] },
-    { name:'Desert', bg:assets.bg.desert, mod:{flyer:0.8,speed:1.1}, path:[[1,0],[1,1],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[7,3],[7,4],[6,4],[5,4],[4,4],[3,4],[2,4],[1,4],[1,5],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],[7,6],[7,7],[7,8],[6,8],[5,8],[4,8],[3,8],[2,8],[1,8],[1,9],[1,10],[2,10],[3,10],[4,10],[5,10],[6,10],[7,10],[7,11],[7,12],[6,12],[5,12],[4,12],[4,13],[4,14],[4,15]] },
-    { name:'City', bg:assets.bg.city, mod:{flyer:1.3,speed:0.95}, path:[[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[5,2],[5,3],[4,3],[3,3],[3,4],[3,5],[4,5],[5,5],[6,5],[7,5],[7,6],[7,7],[6,7],[5,7],[4,7],[4,8],[4,9],[5,9],[6,9],[7,9],[7,10],[7,11],[6,11],[5,11],[4,11],[3,11],[2,11],[1,11],[1,12],[1,13],[2,13],[3,13],[4,13],[5,13],[6,13],[6,14],[6,15]] }
-  ];
-
-  // ---------- Towers / Enemies ----------
+  function shoot(t,e){const b=el('div','bullet'+(t.slow>0?' frost':'')); world.appendChild(b); S.bullets.push({el:b,x:t.x,y:t.y,target:e,dmg:t.dmg,speed:300,slow:t.slow,slowDur:1600});}
+  function towerStep(t,dt){t.cd-=dt*S.speed; if(t.cd>0) return; let best=null, bestD=1e9; for(const e of S.enemies){ if(!e.alive) continue; if(e.tag==='air'&&!t.aa) continue; const d=dist(t.x,t.y, e.x+10, e.y+10); if(d<t.rng && d<bestD){ bestD=d; best=e; } } if(best){ shoot(t,best); t.cd = 1000/Math.max(0.1,t.rof); } }
+  function enemyStep(e,dt){ if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slow=1; } const target=S.path[e.idx+1]; if(!target){ e.alive=false; e.el.remove(); S.baseHP=clamp(S.baseHP-1,0,99); upd(); if(S.baseHP<=0) gameOver(); return; } const cx=e.x+10, cy=e.y+10; const ang=Math.atan2(target.y-cy, target.x-cx); const sp=e.spd*e.slow*(dt/1000)*S.speed; e.x+=Math.cos(ang)*sp; e.y+=Math.sin(ang)*sp; e.el.style.left=e.x+'px'; e.el.style.top=e.y+'px'; if(dist(cx,cy,target.x,target.y)<6) e.idx++; }
+  function bulletStep(p,dt){ if(!p.target||!p.target.alive){ p.dead=true; p.el.remove(); return; } const dx=(p.target.x+10)-p.x, dy=(p.target.y+10)-p.y; const d=Math.hypot(dx,dy); const sp=p.speed*(dt/1000)*S.speed; p.x+=dx/d*sp; p.y+=dy/d*sp; p.el.style.left=p.x+'px'; p.el.style.top=p.y+'px'; if(d<8){ p.target.hp-=p.dmg; if(p.slow>0 && p.target.tag!=='air'){ p.target.slow=Math.max(0.35, p.target.slow*(1*p.slow)); p.target.slowT=p.slowDur/1000; } if(p.target.hp<=0) killEnemy(p.target); p.dead=true; p.el.remove(); } }
+  function killEnemy(e){ e.alive=false; e.el.remove(); const bonus=(e.kind==='boss'?60:(e.kind==='brute'?8:0)); S.gold += 6 + Math.floor(S.wave/2) + bonus; const roll=Math.random(); if(e.kind==='boss'){ S.rare+=1; addInv('คริสตัลหายาก'); } else if(roll<0.55){ S.mats+=1; addInv('ชิ้นส่วน'); } else if(roll<0.85){ S.coins+=1; addInv('เหรียญโบราณ'); } else if(Math.random()<0.2){ S.rare+=1; addInv('คริสตัลหายาก'); } upd(); }
+  // ---- DEFINITIONS ----
   const DEF_TOWER={
-    gun:{name:'ป้อมปืน', cost:50, dmg:6, rng:120, rof:1.6, aa:true, slow:0, splash:0},
-    sniper:{name:'สไนเปอร์', cost:80, dmg:22, rng:240, rof:0.55, aa:true, slow:0, splash:0},
-    frost:{name:'ฟรอสต์', cost:60, dmg:5, rng:130, rof:1.0, aa:false, slow:0.45, splash:0},
-    missile:{name:'ป้อมจรวด', cost:100, dmg:18, rng:180, rof:0.8, aa:false, slow:0, splash:28}
+    gun:{name:'ป้อมปืน',cost:50,dmg:6,rng:120,rof:1.6,aa:true,slow:0,color:'#22c55e'},
+    sniper:{name:'สไนเปอร์',cost:80,dmg:22,rng:240,rof:0.55,aa:true,slow:0,color:'#38bdf8'},
+    frost:{name:'ฟรอสต์',cost:60,dmg:5,rng:130,rof:1.0,aa:false,slow:0.45,color:'#a5f3fc'}
   };
   const DEF_ENEMY={
-    runner:(w)=>({hp:(12+w*1), spd:85, tag:'ground', cls:'runner'}),
-    brute:(w)=>({hp:(42+w*5), spd:45, tag:'ground', cls:'brute'}),
-    flyer:(w)=>({hp:(16+w*2), spd:78, tag:'air', cls:'flyer'}),
-    bandit:(w)=>({hp:(10+w*1), spd:125, tag:'ground', cls:'bandit'}),
-    boss:(w)=>({hp:(320+w*36), spd:55, tag:'ground', cls:'boss'})
+    runner:w=>({hp:12+w*1, spd:85, tag:'ground', color:'#ef4444'}),
+    brute:w=>({hp:42+w*5, spd:45, tag:'ground', color:'#8b5cf6'}),
+    flyer:w=>({hp:16+w*2, spd:78, tag:'air', color:'#f97316'}),
+    boss:w=>({hp:320+w*36, spd:55, tag:'ground', color:'#f59e0b'})
   };
 
-  // ---------- UI helpers ----------
-  function show(id){$(id).classList.add('show');}
-  function hide(id){$(id).classList.remove('show');}
-
-  // ---------- Build Stage ----------
-  function buildStage(idx){
-    const st=STAGES[(idx-1)%STAGES.length];
-    world.style.backgroundImage=`url('${st.bg}')`;
-    world.innerHTML='';
-    S.tiles=[]; S.path=[];
-    S.rangeIndicator=el('div','range-indicator'); S.rangeIndicator.style.display='none'; world.appendChild(S.rangeIndicator);
-
-    for(let r=0;r<GRID.rows;r++){
-      for(let c=0;c<GRID.cols;c++){
-        const t=el('div','tile build');
-        t.style.left=(c*GRID.size)+'px';
-        t.style.top=(r*GRID.size)+'px';
-        world.appendChild(t);
-        S.tiles.push({el:t,r,c,type:'build'});
-      }
-    }
-    for(const [r,c] of st.path){
-      const idx=r*GRID.cols+c; const tile=S.tiles[idx];
-      tile.type='path'; tile.el.classList.remove('build'); tile.el.classList.add('path');
-      S.path.push({x:c*GRID.size+GRID.size/2, y:r*GRID.size+GRID.size/2});
-    }
-    const goal=S.path[S.path.length-1]; const base=el('div','base'); base.style.left=(goal.x-21)+'px'; base.style.top=(goal.y-21)+'px'; world.appendChild(base);
-    S.start=S.path[0]; S.goal=goal;
-  }
-
-  // ---------- Game Core ----------
-  function updHUD(){ ui.stage.textContent=S.stage; ui.wave.textContent=S.wave; ui.hp.textContent=S.baseHP; ui.gold.textContent=S.gold; renderBag(); }
-  function selectTower(t){
-    if(S.selected && S.selected.el) S.selected.el.classList.remove('highlight');
-    S.selected=t;
-    if(t && t.el){
-      t.el.classList.add('highlight');
-      S.rangeIndicator.style.display='block';
-      S.rangeIndicator.style.width=t.rng*2+'px';
-      S.rangeIndicator.style.height=t.rng*2+'px';
-      S.rangeIndicator.style.left=(t.x - t.rng)+'px';
-      S.rangeIndicator.style.top=(t.y - t.rng)+'px';
-    } else {
-      S.rangeIndicator.style.display='none';
-    }
-  }
-
-  function placeTower(kind,r,c){
+  function startWave(){ if(S.running){ tip('กำลังต่อสู้'); return; } S.running=true; tip('Wave '+S.wave); let pack=[]; const n=S.wave; if(n%5===0){ pack = Array(8).fill('runner').concat(Array(4).fill('brute')).concat(['boss']); } else { pack = Array(6+Math.floor(n*0.7)).fill('runner'); if(n>2) pack=pack.concat(Array(Math.max(1,Math.floor(n/3))).fill('brute')); if(n>3) pack=pack.concat(Array(Math.max(1,Math.floor(n/4))).fill('flyer')); }
+    let i=0; const iv=setInterval(()=>{ spawnEnemy(pack[i]); i++; if(i>=pack.length){ clearInterval(iv); setTimeout(()=>{ if(S.baseHP>0){ S.running=false; S.wave++; S.gold+=24; upd(); tip('เคลียร์เวฟ +24G'); } }, 1400); } }, Math.max(220, 520 - S.wave*18)/S.speed);
+  // ---- TOWERS ----
+  function placeTower(kind, r, c){
     const def=DEF_TOWER[kind];
     if(S.gold<def.cost){ tip('ทองไม่พอ'); return; }
-    const tile=S.tiles[r*GRID.cols+c];
-    if(tile.type!=='build'){ tip('วางได้บนช่อง Build'); return; }
-    for(const t of S.towers){ if(t.r===r && t.c===c){ tip('มีป้อมอยู่แล้ว'); return; } }
-    S.gold-=def.cost; updHUD();
-    const d=el('div','tower sprite'); d.style.backgroundImage=`url('${assets.tower[kind]}')`;
-    d.style.left=(tile.el.offsetLeft+3)+'px'; d.style.top=(tile.el.offsetTop+3)+'px'; world.appendChild(d);
-    const tow={el:d,kind,r,c,x:tile.el.offsetLeft+GRID.size/2,y:tile.el.offsetTop+GRID.size/2,dmg:def.dmg,rng:def.rng,rof:def.rof,aa:def.aa,slow:def.slow,splash:def.splash,cd:0,lv:1,invested:def.cost};
-    d.addEventListener('click',e=>{e.stopPropagation(); selectTower(tow);});
-    d.addEventListener('touchstart',e=>{e.preventDefault(); e.stopPropagation(); selectTower(tow);},{passive:false});
-    S.towers.push(tow); selectTower(tow);
+    // วางได้เฉพาะช่อง build (ไม่อยู่บน path)
+    if(PATH_RC.some(([rr,cc])=>rr===r&&cc===c)){ tip('วางบนทางเดินไม่ได้'); return; }
+    // วางซ้ำตำแหน่งเดิม?
+    if(S.towers.some(t=>t.r===r&&t.c===c)){ tip('มีป้อมอยู่แล้ว'); return; }
+    S.gold -= def.cost; upd();
+    const tile=rc2xy(r,c);
+    const tow={
+      kind,r,c,x:tile.x,y:tile.y,
+      dmg:def.dmg,rng:def.rng,rof:def.rof,aa:def.aa,slow:def.slow,
+      cd:0, lv:1, invested:def.cost, color:def.color
+    };
+    S.towers.push(tow);
+    selectTower(tow);
   }
-
+  function selectTower(t){ S.selected=t||null; renderSelected(); }
   function sellSelected(){
     const t=S.selected; if(!t){ tip('ยังไม่เลือกป้อม'); return; }
-    const refund=Math.floor(t.invested*0.6); S.gold+=refund; t.el.remove();
-    S.towers=S.towers.filter(x=>x!==t); selectTower(null); updHUD();
-    tip('ขายป้อม +'+refund+'G');
+    const refund=Math.floor(t.invested*0.6);
+    S.gold+=refund;
+    S.towers=S.towers.filter(x=>x!==t);
+    selectTower(null); upd(); tip('ขายป้อม +'+refund+'G');
+  }
+  function renderSelected(){
+    const box=ui.selInfo; box.innerHTML='';
+    const t=S.selected; if(!t){ box.innerHTML='<div class="note">แตะช่อง Build เพื่อวาง/แตะป้อมเพื่อเลือก</div>'; return; }
+    const def=DEF_TOWER[t.kind];
+    box.innerHTML = `
+      <div class="kv"><span>ชนิด</span><b>${def.name}</b></div>
+      <div class="kv"><span>LV</span><b>${t.lv}</b></div>
+      <div class="kv"><span>DMG</span><b>${t.dmg.toFixed(1)}</b></div>
+      <div class="kv"><span>Range</span><b>${Math.round(t.rng)}</b></div>
+      <div class="kv"><span>ROF</span><b>${t.rof.toFixed(2)}/s</b></div>
+      <div class="note">ฟรอสต์ชะลอศัตรู, สไนเปอร์ยิงไกลแรง, ป้อมปืนสมดุล</div>`;
+  }
+  function upgradeSelected(stat){
+    const t=S.selected; if(!t){ tip('ยังไม่เลือกป้อม'); return; }
+    if(stat==='dmg'){
+      if(S.mats<5){ tip('ชิ้นส่วนไม่พอ'); return; }
+      S.mats-=5; t.dmg*=1.25; t.lv++; tip('อัป DMG +25%');
+    }else if(stat==='rng'){
+      if(S.mats<5){ tip('ชิ้นส่วนไม่พอ'); return; }
+      S.mats-=5; t.rng*=1.15; t.lv++; tip('อัป ระยะ +15%');
+    }else if(stat==='rof'){
+      if(S.coins<5){ tip('เหรียญไม่พอ'); return; }
+      S.coins-=5; t.rof*=1.15; t.lv++; tip('อัป ยิงเร็ว +15%');
+    }
+    renderSelected(); upd();
   }
 
-  function dmgMultiplier(){
-    let m=1;
-    if(S.research.ball1) m*=1.10;
-    if(S.research.ball2) m*=1.10;
-    return m;
+  function addInv(name){ const d=el('div','tag'); d.textContent=name; ui.inv.appendChild(d); if(ui.inv.childNodes.length>40) ui.inv.removeChild(ui.inv.firstChild); }
+  function renderMarket(){ const box=ui.market; box.innerHTML=''; if(!S.listings.length){ box.innerHTML='<div class="note">ยังไม่มีประกาศขาย ลองลงขายสิ่งของจากกระเป๋า</div>'; return; } S.listings.forEach((it,idx)=>{ const row=el('div'); row.className='kv'; row.innerHTML=`<span>${it.name} x${it.qty}</span><b>${it.price}G</b>`; const buy=el('button','btn small'); buy.textContent='ซื้อ'; buy.style.marginLeft='8px'; buy.addEventListener('click',()=>{ if(S.gold<it.price){ tip('ทองไม่พอ'); return; } S.gold-=it.price; if(it.name==='ชิ้นส่วน') S.mats+=it.qty; if(it.name==='คริสตัลหายาก') S.rare+=it.qty; if(it.name==='เหรียญโบราณ') S.coins+=it.qty; S.listings.splice(idx,1); upd(); tip('ซื้อสำเร็จ'); }); row.appendChild(buy); box.appendChild(row); }); }
+  // ---- ENEMIES / BULLETS ----
+  function spawnEnemy(kind){
+    const def=DEF_ENEMY[kind](S.wave);
+    const e={
+      kind, hp:def.hp, max:def.hp, spd:def.spd, tag:def.tag,
+      idx:0, x:S.start.x-10, y:S.start.y-10, alive:true,
+      slow:1, slowT:0, worth:6+Math.floor(S.wave/2), color:def.color
+    };
+    S.enemies.push(e);
   }
-
   function shoot(t,e){
-    const b=el('div','bullet '+t.kind); world.appendChild(b);
-    S.bullets.push({el:b,x:t.x,y:t.y,target:e,dmg:t.dmg*dmgMultiplier(),speed:300,slow:t.slow,slowDur:1600,splash:t.splash});
+    const b={x:t.x, y:t.y, target:e, dmg:t.dmg, speed:300, slow:t.slow, slowDur:1600, dead:false, color:(t.kind==='frost'?'#a5f3fc':'#60a5fa')};
+    S.bullets.push(b);
   }
   function towerStep(t,dt){
-    t.cd-=dt; if(t.cd>0) return;
+    t.cd -= dt*S.speed; if(t.cd>0) return;
     let best=null, bestD=1e9;
     for(const e of S.enemies){
       if(!e.alive) continue;
       if(e.tag==='air' && !t.aa) continue;
-      const d=dist(t.x,t.y,e.x+14,e.y+14);
-      if(d<t.rng && d<bestD){ best=e; bestD=d; }
+      const d=dist(t.x,t.y, e.x+10, e.y+10);
+      if(d<t.rng && d<bestD){ bestD=d; best=e; }
     }
-    if(best){ shoot(t,best); const rofBoost=(S._ocTimer>0?1.7:1.0); t.cd=1000/Math.max(0.1,t.rof*rofBoost); }
+    if(best){ shoot(t,best); t.cd = 1000/Math.max(0.1,t.rof); }
   }
   function enemyStep(e,dt){
-    if(e.slowT>0){ e.slowT-=dt; if(e.slowT<=0) e.slow=1; }
+    if(e.slowT>0){ e.slowT -= dt*S.speed; if(e.slowT<=0) e.slow=1; }
     const target=S.path[e.idx+1];
-    if(!target){ e.alive=false; e.el.remove(); S.baseHP=clamp(S.baseHP-1,0,99); updHUD(); if(S.baseHP<=0) gameOver(); return; }
-    const cx=e.x+14, cy=e.y+14;
-    const ang=Math.atan2(target.y-cy,target.x-cx);
-    const st=STAGES[(S.stage-1)%STAGES.length];
-    const speedFactor=st.mod.speed;
-    const sp=e.spd*e.slow*(dt/1000)*speedFactor;
+    if(!target){
+      e.alive=false;
+      S.baseHP=clamp(S.baseHP-1,0,99); upd();
+      if(S.baseHP<=0) gameOver();
+      return;
+    }
+    const cx=e.x+10, cy=e.y+10;
+    const ang=Math.atan2(target.y-cy, target.x-cx);
+    const sp=e.spd*e.slow*(dt/1000)*S.speed;
     e.x+=Math.cos(ang)*sp; e.y+=Math.sin(ang)*sp;
-    e.el.style.left=e.x+'px'; e.el.style.top=e.y+'px';
     if(dist(cx,cy,target.x,target.y)<6) e.idx++;
   }
-  function projectileStep(p,dt){
-    if(!p.target || !p.target.alive){ p.dead=true; p.el.remove(); return; }
-    const dx=(p.target.x+14)-p.x, dy=(p.target.y+14)-p.y;
-    const d=Math.hypot(dx,dy); const sp=p.speed*(dt/1000);
-    p.x+=dx/d*sp; p.y+=dy/d*sp; p.el.style.left=p.x+'px'; p.el.style.top=p.y+'px';
+  function bulletStep(p,dt){
+    if(!p.target||!p.target.alive){ p.dead=true; return; }
+    const dx=(p.target.x+10)-p.x, dy=(p.target.y+10)-p.y;
+    const d=Math.hypot(dx,dy);
+    const sp=p.speed*(dt/1000)*S.speed;
+    p.x+=dx/d*sp; p.y+=dy/d*sp;
     if(d<8){
-      if(p.splash>0){
-        const expl=el('div','explosion');
-        expl.style.left=(p.x-p.splash/2-5)+'px'; expl.style.top=(p.y-p.splash/2-5)+'px';
-        expl.style.width=p.splash*2+'px'; expl.style.height=p.splash*2+'px';
-        world.appendChild(expl); setTimeout(()=>expl.remove(),300);
-        for(const e of S.enemies){ if(!e.alive||e.tag==='air') continue;
-          if(dist(p.x,p.y,e.x+14,e.y+14)<p.splash) dealDamage(e,p.dmg);
-        }
-      } else {
-        dealDamage(p.target,p.dmg);
-        if(p.slow>0 && p.target.tag!=='air'){ p.target.slow=Math.max(0.35,1-p.slow); p.target.slowT=p.slowDur; }
+      p.target.hp-=p.dmg;
+      if(p.slow>0 && p.target.tag!=='air'){
+        p.target.slow = Math.max(0.35, p.target.slow * p.slow);
+        p.target.slowT = p.slowDur; // หน่วย ms ให้ตรงกับ dt
       }
-      p.dead=true; p.el.remove();
+      if(p.target.hp<=0) killEnemy(p.target);
+      p.dead=true;
     }
   }
-  function dealDamage(e, dmg){
-    e.hp-=dmg;
-    if(e.hp<=0) killEnemy(e);
-    else e.healthBar.style.width=(e.hp/e.maxHP*100)+'%';
+  function addInv(name){
+    const d=el('div','tag'); d.textContent=name; ui.inv.appendChild(d);
+    if(ui.inv.childNodes.length>40) ui.inv.removeChild(ui.inv.firstChild);
   }
   function killEnemy(e){
-    if(!e.alive) return; e.alive=false; e.el.remove();
-    const base=6+Math.floor(S.wave/2);
+    e.alive=false;
     const bonus=(e.kind==='boss'?60:(e.kind==='brute'?8:0));
-    const diffR=DIFF[S.difficulty].reward;
-    S.gold += Math.floor((base+bonus)*diffR);
-    // เล็กน้อย: ดรอปวัตถุดิบ
-    const r=Math.random();
-    if(e.kind==='boss'){ addInv('คริสตัลหายาก'); }
-    else if(r<0.5){ addInv('ชิ้นส่วน'); }
-    else if(r<0.8){ addInv('เหรียญ'); }
-    updHUD();
+    S.gold += 6 + Math.floor(S.wave/2) + bonus;
+    const roll=Math.random();
+    if(e.kind==='boss'){ S.rare+=1; addInv('คริสตัลหายาก'); }
+    else if(roll<0.55){ S.mats+=1; addInv('ชิ้นส่วน'); }
+    else if(roll<0.85){ S.coins+=1; addInv('เหรียญโบราณ'); }
+    else if(Math.random()<0.2){ S.rare+=1; addInv('คริสตัลหายาก'); }
+    upd();
   }
 
-  // ---------- Waves ----------
-  function spawnEnemy(kind){
-    const w=S.wave;
-    const def=DEF_ENEMY[kind](w);
-    const st=STAGES[(S.stage-1)%STAGES.length];
-    // scale difficulty
-    const scale=DIFF[S.difficulty].enemyHP * S.difficultyScale;
-    const HP=Math.floor(def.hp*scale);
-    const eEl=el('div','enemy sprite'); eEl.style.backgroundImage=`url('${assets.enemy[kind]}')`;
-    const hb=el('div','health-bar'); const hbi=el('div','health-bar-inner'); hb.appendChild(hbi); eEl.appendChild(hb);
-    world.appendChild(eEl);
-    const e={el:eEl,healthBar:hbi,kind,tag:def.tag,hp:HP,maxHP:HP,spd:def.spd,idx:0,x:S.start.x-14,y:S.start.y-14,alive:true,slow:1,slowT:0};
-    eEl.style.left=e.x+'px'; eEl.style.top=e.y+'px';
-    S.enemies.push(e);
+  function npcSell(kind){ if(kind==='mat5'){ if(S.mats<5){ tip('ชิ้นส่วนไม่พอ (≥5)'); return; } S.mats-=5; S.gold+=PRICES.sell.mat5; tip('ขายชิ้นส่วน x5 ให้ NPC +'+PRICES.sell.mat5+'G'); } else if(kind==='coin1'){ if(S.coins<1){ tip('ไม่มีเหรียญโบราณ'); return; } S.coins-=1; S.gold+=PRICES.sell.coin1; tip('ขายเหรียญโบราณ x1 ให้ NPC +'+PRICES.sell.coin1+'G'); } else if(kind==='rare1'){ if(S.rare<1){ tip('ไม่มีคริสตัล'); return; } S.rare-=1; S.gold+=PRICES.sell.rare1; tip('ขายคริสตัลหายาก x1 ให้ NPC +'+PRICES.sell.rare1+'G'); } upd(); }
+  // ---- MARKET / NPC ----
+  function renderMarket(){
+    const box=ui.market; box.innerHTML='';
+    if(!S.listings.length){ box.innerHTML='<div class="note">ยังไม่มีประกาศขาย ลองลงขายสิ่งของจากกระเป๋า</div>'; return; }
+    S.listings.forEach((it,idx)=>{
+      const row=el('div'); row.className='kv';
+      row.innerHTML=`<span>${it.name} x${it.qty}</span><b>${it.price}G</b>`;
+      const buy=el('button','btn small'); buy.textContent='ซื้อ'; buy.style.marginLeft='8px';
+      buy.addEventListener('click',()=>{
+        if(S.gold<it.price){ tip('ทองไม่พอ'); return; }
+        S.gold-=it.price;
+        if(it.name==='ชิ้นส่วน') S.mats+=it.qty;
+        if(it.name==='คริสตัลหายาก') S.rare+=it.qty;
+        if(it.name==='เหรียญโบราณ') S.coins+=it.qty;
+        S.listings.splice(idx,1); upd(); tip('ซื้อสำเร็จ');
+      });
+      row.appendChild(buy); box.appendChild(row);
+    });
   }
+  function npcSell(kind){
+    if(kind==='mat5'){
+      if(S.mats<5){ tip('ชิ้นส่วนไม่พอ (≥5)'); return; }
+      S.mats-=5; S.gold+=PRICES.sell.mat5; tip('ขายชิ้นส่วน x5 ให้ NPC +'+PRICES.sell.mat5+'G');
+    }else if(kind==='coin1'){
+      if(S.coins<1){ tip('ไม่มีเหรียญโบราณ'); return; }
+      S.coins-=1; S.gold+=PRICES.sell.coin1; tip('ขายเหรียญโบราณ x1 ให้ NPC +'+PRICES.sell.coin1+'G');
+    }else if(kind==='rare1'){
+      if(S.rare<1){ tip('ไม่มีคริสตัล'); return; }
+      S.rare-=1; S.gold+=PRICES.sell.rare1; tip('ขายคริสตัลหายาก x1 ให้ NPC +'+PRICES.sell.rare1+'G');
+    }
+    upd();
+  }
+
+  function upd(){ ui.hp.textContent=S.baseHP; ui.gold.textContent=S.gold; ui.wave.textContent=S.wave; ui.mats.textContent=S.mats; ui.coins.textContent=S.coins; ui.rare.textContent=S.rare; renderMarket(); }
+  // ---- UI / STATE ----
+  function upd(){
+    ui.hp.textContent=S.baseHP; ui.gold.textContent=S.gold; ui.wave.textContent=S.wave;
+    ui.mats.textContent=S.mats; ui.coins.textContent=S.coins; ui.rare.textContent=S.rare;
+    renderMarket();
+  }
+  function gameOver(){ S.paused=true; S.running=false; tip('ฐานแตก! กด รีเซ็ต'); }
+
+  function loop(ts){ if(!S.last) S.last=ts; const dt=ts-S.last; S.last=ts; if(!S.paused){ for(const e of S.enemies){ if(e.alive) enemyStep(e,dt); } for(const t of S.towers){ towerStep(t,dt); } for(const b of S.bullets){ bulletStep(b,dt); } S.enemies=S.enemies.filter(e=>e.alive); S.bullets=S.bullets.filter(b=>!b.dead); } RAF(loop); }
+  // ---- WAVE: queue-based spawn (speed-aware) ----
   function startWave(){
     if(S.running){ tip('กำลังต่อสู้'); return; }
-    S.running=true; tip('Wave '+S.wave);
-    const n=S.wave; const st=STAGES[(S.stage-1)%STAGES.length];
+    S.running = true;
+    tip('Wave '+S.wave);
     let pack=[];
-    if(n%5===0){ pack=Array(8).fill('runner').concat(Array(4).fill('brute')).concat(['boss']); }
-    else {
-      pack=Array(6+Math.floor(n*0.7)).fill('runner');
-      if(n>2) pack=pack.concat(Array(Math.max(1,Math.floor(n/3))).fill('brute'));
-      if(n>3) pack=pack.concat(Array(Math.max(1,Math.floor(n/4*st.mod.flyer))).fill('flyer'));
-      if(n>4) pack=pack.concat(Array(Math.max(2,Math.floor(n/2))).fill('bandit'));
+    const n=S.wave;
+    if(n%5===0){
+      pack = Array(8).fill('runner').concat(Array(4).fill('brute')).concat(['boss']);
+    } else {
+      pack = Array(6+Math.floor(n*0.7)).fill('runner');
+      if(n>2) pack = pack.concat(Array(Math.max(1,Math.floor(n/3))).fill('brute'));
+      if(n>3) pack = pack.concat(Array(Math.max(1,Math.floor(n/4))).fill('flyer'));
     }
-    let i=0;
-    const iv=setInterval(()=>{
-      if(!S.paused && S.running){
-        spawnEnemy(pack[i]); i++; if(i>=pack.length){ clearInterval(iv); }
-      }
-    }, Math.max(200,520 - S.wave*18));
+    S.spawnQ = pack.slice();
+    S.spawnTimer = 0;
+    S.spawnGap = Math.max(220, 520 - S.wave*18);
   }
-  function checkWaveEnd(){
-    if(S.running && S.enemies.length===0){
-      S.running=false; S.wave++;
-      // Interest
-      const baseInterest = 5; // 5G/100G
-      let extra = 0;
-      if(S.research.fin1) extra += 2;
-      if(S.research.fin2) extra += 3;
-      const interestPer100 = baseInterest + extra;
-      const interest = Math.floor(S.gold/100)*interestPer100;
-      const diffR=DIFF[S.difficulty].reward;
-      S.gold += Math.floor(24*diffR) + interest;
-      tip(`เคลียร์เวฟ +${Math.floor(24*diffR)}G (ดอกเบี้ย +${interest}G)`);
-      updHUD();
 
-      // เปลี่ยน Stage ทุก 10 Wave
-      if(S.wave>10){
-        S.wave=1; S.stage++;
-        if(S.endless){ S.difficultyScale*=1.07; } // ค่อยๆ โหดขึ้น
-        S.towers.forEach(t=>{ /* คงอยู่ */ });
-        S.enemies=[]; S.bullets=[];
-        buildStage(S.stage);
-        tip('Stage ใหม่!');
+  // ---- RENDER (Canvas) ----
+  function drawGridAndPath(){
+    // พื้นหลัง
+    ctx.fillStyle = '#0a0f1a'; ctx.fillRect(0,0,W,H);
+    // ช่อง build
+    ctx.save();
+    for(let r=0;r<GRID.rows;r++){
+      for(let c=0;c<GRID.cols;c++){
+        const x=c*GRID.size+GRID.off, y=r*GRID.size+GRID.off;
+        // เป็น path?
+        const onPath = PATH_RC.some(([rr,cc])=>rr===r&&cc===c);
+        if(onPath){
+          ctx.fillStyle='#0b1e34'; ctx.fillRect(x,y,GRID.size-2,GRID.size-2);
+          ctx.strokeStyle='#10335d'; ctx.strokeRect(x+0.5,y+0.5,GRID.size-3,GRID.size-3);
+        }else{
+          ctx.fillStyle='#0c1424'; ctx.fillRect(x,y,GRID.size-2,GRID.size-2);
+          ctx.setLineDash([4,4]); ctx.strokeStyle='#1f3861'; ctx.strokeRect(x+0.5,y+0.5,GRID.size-3,GRID.size-3);
+          ctx.setLineDash([]);
+        }
       }
     }
+    ctx.restore();
+    // Base
+    ctx.save();
+    ctx.fillStyle = '#1f2937'; ctx.strokeStyle='#94a3b8'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(S.goal.x-21, S.goal.y-21, 42, 42, 10); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  function drawTowers(){
+    for(const t of S.towers){
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.fillStyle=t.color; ctx.strokeStyle=(t.kind==='sniper'?'#075985':(t.kind==='frost'?'#155e75':'#0b3b2a'));
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.roundRect(-13,-13,26,26,6); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+  }
+  function drawEnemies(){
+    for(const e of S.enemies){
+      if(!e.alive) continue;
+      ctx.save();
+      ctx.translate(e.x, e.y);
+      // body
+      ctx.fillStyle=e.color; ctx.beginPath(); ctx.roundRect(0,0,20,20,6); ctx.fill();
+      // HP bar
+      const w=20, h=3, pct=clamp(e.hp/e.max,0,1);
+      ctx.fillStyle='#111827'; ctx.fillRect(0,-6,w,h);
+      ctx.fillStyle='#22c55e'; ctx.fillRect(0,-6,w*pct,h);
+      ctx.restore();
+    }
+  }
+  function drawBullets(){
+    for(const b of S.bullets){
+      if(b.dead) continue;
+      ctx.save();
+      ctx.fillStyle=b.color;
+      ctx.beginPath(); ctx.arc(b.x,b.y,3,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
   }
 
-  // ---------- Items / Shop ----------
-  function renderBag(){
-    ui.bag.innerHTML='';
-    if(S.items.bomb) ui.bag.appendChild(tag(`💣 Bomb x${S.items.bomb}`));
-    if(S.items.freeze) ui.bag.appendChild(tag(`❄️ Freeze x${S.items.freeze}`));
-    if(S.items.oc) ui.bag.appendChild(tag(`⚙️ Overclock x${S.items.oc}`));
+  // ---- INPUT (tap to place/select) ----
+  function screenToRC(x,y){
+    const c=Math.floor((x-GRID.off)/GRID.size), r=Math.floor((y-GRID.off)/GRID.size);
+    if(r<0||c<0||r>=GRID.rows||c>=GRID.cols) return null;
+    return {r,c};
   }
-  function tag(s){ const d=el('div','tag'); d.textContent=s; return d; }
-  function buy(cost, cb){
-    if(S.running){ tip('ซื้อระหว่าง wave ได้ แต่บางไอเทมใช้ตอนว่างจะดีกว่า'); }
-    if(S.gold<cost){ tip('ทองไม่พอ'); return; }
-    S.gold-=cost; cb(); updHUD();
-  }
-  function openShop(){ show('shop'); }
-  function closeShop(){ hide('shop'); }
-  function openLab(){ show('lab'); }
-  function closeLab(){ hide('lab'); }
+  canvas.addEventListener('click', e=>{
+    const rect=canvas.getBoundingClientRect();
+    const x=e.clientX-rect.left, y=e.clientY-rect.top;
+    const rc=screenToRC(x,y); if(!rc) return;
+    if(S.mode==='place'){
+      const k=$("selTower").value;
+      placeTower(k, rc.r, rc.c);
+      S.mode=null;
+    }else{
+      // เลือกป้อมหากคลิกใกล้ศูนย์กลางป้อม
+      const tile=rc2xy(rc.r,rc.c);
+      const found=S.towers.find(t=>Math.hypot(t.x-tile.x,t.y-tile.y)<GRID.size*0.4);
+      if(found) selectTower(found); else selectTower(null);
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchstart', e=>{
+    const t=e.touches[0]; const rect=canvas.getBoundingClientRect();
+    const x=t.clientX-rect.left, y=t.clientY-rect.top;
+    const rc=screenToRC(x,y); if(!rc) return;
+    if(S.mode==='place'){
+      const k=$("selTower").value;
+      placeTower(k, rc.r, rc.c); S.mode=null;
+    }else{
+      const tile=rc2xy(rc.r,rc.c);
+      const found=S.towers.find(t=>Math.hypot(t.x-tile.x,t.y-tile.y)<GRID.size*0.4);
+      if(found) selectTower(found); else selectTower(null);
+    }
+  }, {passive:true});
 
-  // Use Items
-  function useBomb(x,y){
-    const radius=70, dmg=120;
-    const ex=el('div','meteor-impact'); ex.style.left=(x-50)+'px'; ex.style.top=(y-50)+'px'; world.appendChild(ex); setTimeout(()=>ex.remove(),350);
-    for(const e of S.enemies){ if(!e.alive||e.tag==='air') continue; if(dist(x,y,e.x+14,e.y+14)<radius) dealDamage(e,dmg); }
-  }
-  function useFreeze(x,y){
-    const radius=90, slow=0.4, dur=1800;
-    const ex=el('div','meteor-impact'); ex.style.background='rgba(59,130,246,.7)'; ex.style.left=(x-50)+'px'; ex.style.top=(y-50)+'px'; world.appendChild(ex); setTimeout(()=>ex.remove(),350);
-    for(const e of S.enemies){ if(!e.alive||e.tag==='air') continue; if(dist(x,y,e.x+14,e.y+14)<radius){ e.slow=Math.min(e.slow,slow); e.slowT=dur; } }
-  }
-  function useOverclock(){
-    if(S._ocTimer>0){ tip('Overclock ยังทำงานอยู่'); return; }
-    S._ocTimer=6000; tip('⚙️ Overclock!');
+  // Buttons (click + touch)
+  // ---- BUTTONS ----
+  function bind(el,fn){ el.addEventListener('click',fn); el.addEventListener('touchstart',e=>{ e.preventDefault(); fn(); }, {passive:false}); }
+  bind($("btnStart"), startWave); bind($("btnPause"), ()=>{ S.paused=!S.paused; $("btnPause").textContent=S.paused?'▶ Resume':'⏸ Pause'; }); bind($("btnSpeed"), ()=>{ S.speed=(S.speed===1?2:S.speed===2?3:1); $("btnSpeed").textContent='⏩ '+S.speed+'x'; }); bind($("btnReset"), ()=>init(true)); bind($("btnPlace"), ()=>{ S.mode='place'; tip('แตะช่อง Build เพื่อวางป้อม'); }); bind($("btnSell"), sellSelected); bind($("btnUpDmg"), ()=>upgradeSelected('dmg')); bind($("btnUpRng"), ()=>upgradeSelected('rng')); bind($("btnUpRof"), ()=>upgradeSelected('rof'));
+  bind($("btnStart"), startWave);
+  bind($("btnPause"), ()=>{ S.paused=!S.paused; $("btnPause").textContent=S.paused?'▶ Resume':'⏸ Pause'; });
+  bind($("btnSpeed"), ()=>{ S.speed=(S.speed===1?2:S.speed===2?3:1); $("btnSpeed").textContent='⏩ '+S.speed+'x'; });
+  bind($("btnReset"), ()=>init(true));
+  bind($("btnPlace"), ()=>{ S.mode='place'; tip('แตะช่อง Build เพื่อวางป้อม'); });
+  bind($("btnSell"), sellSelected);
+  bind($("btnUpDmg"), ()=>upgradeSelected('dmg'));
+  bind($("btnUpRng"), ()=>upgradeSelected('rng'));
+  bind($("btnUpRof"), ()=>upgradeSelected('rof'));
+
+  world.addEventListener('click',(e)=>{ if(e.target.closest('.tower')) return; const rect=world.getBoundingClientRect(); const x=e.clientX-rect.left, y=e.clientY-rect.top; const r=Math.floor((y-GRID.off)/GRID.size), c=Math.floor((x-GRID.off)/GRID.size); if(r<0||c<0||r>=GRID.rows||c>=GRID.cols) return; const tile=S.tiles[r*GRID.cols+c]; if(S.mode==='place'){ const k=$("selTower").value; placeTower(k,r,c); S.mode=null; } else { if(tile.type==='build') selectTower(null); } });
+  world.addEventListener('touchstart',(e)=>{ if(e.target.closest('.tower')) return; const t=e.touches[0]; const rect=world.getBoundingClientRect(); const x=t.clientX-rect.left, y=t.clientY-rect.top; const r=Math.floor((y-GRID.off)/GRID.size), c=Math.floor((x-GRID.off)/GRID.size); if(r<0||c<0||r>=GRID.rows||c>=GRID.cols) return; const tile=S.tiles[r*GRID.cols+c]; if(S.mode==='place'){ const k=$("selTower").value; placeTower(k,r,c); S.mode=null; } else { if(tile.type==='build') selectTower(null); } }, {passive:false});
+  $("btnList").addEventListener('click',()=>{
+    const type=$("sellItem").value; const price=Math.max(1, parseInt($("sellPrice").value||'0'));
+    if(type==='mat'){
+      if(S.mats<5){ tip('ชิ้นส่วนไม่พอ (≥5)'); return; }
+      S.mats-=5; S.listings.push({name:'ชิ้นส่วน', qty:5, price});
+    }else{
+      if(S.rare<1){ tip('ไม่มีคริสตัล'); return; }
+      S.rare-=1; S.listings.push({name:'คริสตัลหายาก', qty:1, price});
+    }
+    upd(); tip('ลงประกาศขายแล้ว');
+  });
+  bind($("npcSellMat"), ()=>npcSell('mat5'));
+  bind($("npcSellCoin"), ()=>npcSell('coin1'));
+  bind($("npcSellRare"), ()=>npcSell('rare1'));
+
+  $("btnList").addEventListener('click',()=>{ const type=$("sellItem").value; const price=Math.max(1, parseInt($("sellPrice").value||'0')); if(type==='mat'){ if(S.mats<5){ tip('ชิ้นส่วนไม่พอ (≥5)'); return; } S.mats-=5; S.listings.push({name:'ชิ้นส่วน', qty:5, price}); } else { if(S.rare<1){ tip('ไม่มีคริสตัล'); return; } S.rare-=1; S.listings.push({name:'คริสตัลหายาก', qty:1, price}); } upd(); tip('ลงประกาศขายแล้ว'); });
+  bind($("npcSellMat"), ()=>npcSell('mat5')); bind($("npcSellCoin"), ()=>npcSell('coin1')); bind($("npcSellRare"), ()=>npcSell('rare1'));
+  // ---- INIT/LOOP ----
+  function init(reset){
+    if(reset){
+      Object.assign(S,{
+        baseHP:20,gold:180,wave:1,speed:1,running:false,paused:false,last:0,
+        towers:[],enemies:[],bullets:[],mats:0,coins:0,rare:0,listings:[],
+        selected:null,mode:null, spawnQ:[], spawnTimer:0, spawnGap:400
+      });
+    }
+    buildMap(); upd(); selectTower(null);
   }
 
-  // ---------- Research ----------
-  function doResearch(key,cost,apply){
-    if(S.gold<cost){ tip('ทองไม่พอ'); return; }
-    if(S.research[key]){ tip('วิจัยแล้ว'); return; }
-    S.gold-=cost; S.research[key]=true; apply && apply(); updHUD(); tip('วิจัยสำเร็จ');
-  }
-
-  // ---------- Meteor ----------
-  function castMeteor(x,y){
-    let bonus=0;
-    if(S.research.arc1) bonus+=20;
-    if(S.research.arc2) bonus+=30;
-    const price=120;
-    if(S.gold<price){ tip('ทองไม่พอ'); return; }
-    S.gold-=price; updHUD();
-    const impact=el('div','meteor-impact'); impact.style.left=(x-50)+'px'; impact.style.top=(y-50)+'px'; world.appendChild(impact); setTimeout(()=>impact.remove(),400);
-    for(const e of S.enemies){ if(!e.alive||e.tag==='air') continue; if(dist(x,y,e.x+14,e.y+14)<50) dealDamage(e,85+bonus); }
-    tip('☄️ Meteor!');
-  }
-
-  // ---------- Loop ----------
-  let waveTimer=0;
   function loop(ts){
-    if(!S.last) S.last=ts; const dt=ts-S.last; S.last=ts;
+    if(!S.last) S.last=ts;
+    const dt=ts-S.last; S.last=ts;
+
+    // --- SPAWN QUEUE (speed-aware) ---
+    if(S.running && S.spawnQ.length){
+      S.spawnTimer += dt * S.speed;
+      while(S.spawnTimer >= S.spawnGap && S.spawnQ.length){
+        spawnEnemy(S.spawnQ.shift());
+        S.spawnTimer -= S.spawnGap;
+      }
+    }
+    if(S.running && S.spawnQ.length===0 && S.enemies.length===0){
+      S.running=false; S.wave++; S.gold+=24; upd(); tip('เคลียร์เวฟ +24G');
+    }
+
+    // --- UPDATE ---
     if(!S.paused){
-      // overclock timer
-      if(S._ocTimer>0){ S._ocTimer-=dt; if(S._ocTimer<0) S._ocTimer=0; }
       for(const e of S.enemies){ if(e.alive) enemyStep(e,dt); }
       for(const t of S.towers){ towerStep(t,dt); }
-      for(const b of S.bullets){ projectileStep(b,dt); }
+      for(const b of S.bullets){ if(!b.dead) bulletStep(b,dt); }
       S.enemies=S.enemies.filter(e=>e.alive);
       S.bullets=S.bullets.filter(b=>!b.dead);
-      waveTimer+=dt; if(waveTimer>800){ checkWaveEnd(); waveTimer=0; }
     }
+
+    // --- RENDER ---
+    drawGridAndPath();
+    drawTowers();
+    drawEnemies();
+    drawBullets();
+
     RAF(loop);
   }
 
-  // ---------- Controls ----------
-  $("btnStart").onclick=startWave;
-  $("btnPause").onclick=()=>{ S.paused=!S.paused; $("btnPause").textContent=S.paused?'▶ Resume':'⏸ Pause'; };
-  $("btnPlace").onclick=()=>{ S.mode=(S.mode==='place'?null:'place'); world.style.cursor= S.mode?'copy':'crosshair'; tip('แตะช่อง Build เพื่อวางป้อม'); };
-  $("btnSell").onclick=sellSelected;
-  $("btnMeteor").onclick=()=>{ S.mode='meteor'; world.style.cursor='cell'; tip('แตะพื้นที่เพื่อเรียก Meteor'); };
-  $("btnShop").onclick=openShop; $("shopClose").onclick=closeShop;
-  $("btnResearch").onclick=openLab; $("labClose").onclick=closeLab;
+  function init(reset){ if(reset){ Object.assign(S,{baseHP:20,gold:180,wave:1,speed:1,running:false,paused:false,last:0,towers:[],enemies:[],bullets:[],mats:0,coins:0,rare:0,listings:[],selected:null,mode:null}); } buildMap(); upd(); selectTower(null); }
+  init(true); RAF(loop);
 
-  // Shop buttons
-  $("buyBomb").onclick=()=>buy(60,()=>{ S.items.bomb++; });
-  $("buyFreeze").onclick=()=>buy(70,()=>{ S.items.freeze++; });
-  $("buyOC").onclick=()=>buy(90,()=>{ S.items.oc++; });
-  $("reroll").onclick=()=>buy(15,()=>{ tip('ไอเทมในร้านถูกรีเฟรช (เชิงสัญลักษณ์)'); });
-
-  // Research buttons
-  document.querySelectorAll('#lab [data-r]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const key=btn.dataset.r;
-      const map={
-        ball1:()=>doResearch('ball1',120,null),
-        ball2:()=>doResearch('ball2',220,null),
-        fin1: ()=>doResearch('fin1',100,null),
-        fin2: ()=>doResearch('fin2',200,null),
-        arc1: ()=>doResearch('arc1',120,null),
-        arc2: ()=>doResearch('arc2',240,null),
-      };
-      map[key]&&map[key]();
-    });
-  });
-
-  // clicks on world
-  function handleWorldClick(x,y){
-    // Use items if chosen
-    if(S.mode==='meteor'){ castMeteor(x,y); S.mode=null; world.style.cursor='crosshair'; return; }
-
-    // Use items from bag by long-tap/secondary? เรียบง่าย: ถ้ามี Bomb/Freeze ให้ใช้เมื่อแตะขณะกด Shop ปิดอยู่
-    if(S.items.bomb && !S.running){ /* ใช้ก่อนเริ่ม wave ก็ได้ */ }
-    // ถ้าอยากใช้ระหว่าง wave: แตะสองนิ้ว? เพื่อความง่าย ให้ใช้ผ่าน Shop: ปิด Shop แล้วแตะสนาม:
-    if(S._use==='bomb'){ useBomb(x,y); S.items.bomb--; S._use=null; renderBag(); return; }
-    if(S._use==='freeze'){ useFreeze(x,y); S.items.freeze--; S._use=null; renderBag(); return; }
-
-    // place or deselect
-    const r=Math.floor(y/GRID.size), c=Math.floor(x/GRID.size);
-    if(r<0||c<0||r>=GRID.rows||c>=GRID.cols) return;
-    const tile=S.tiles[r*GRID.cols+c];
-    if(S.mode==='place'){ const kind=$('selTower').value; placeTower(kind,r,c); S.mode=null; world.style.cursor='crosshair'; return; }
-    if(tile.type==='build') selectTower(null);
+  // ===== AutoStart for iPhone attachment viewers =====
+  function demo(){ document.getElementById('overlay').style.display='none'; placeTower('gun',3,2); placeTower('frost',5,6); setTimeout(startWave, 400); }
+  // 1) pageshow/visibilitychange often fire in viewers even when click is blocked
+  function demo(){
+    document.getElementById('overlay').style.display='none';
+    // วางป้อมนำร่อง
+    placeTower('gun',3,2);
+    placeTower('frost',5,6);
+    setTimeout(startWave, 400);
   }
-  world.addEventListener('click',e=>{ if(e.target.closest('.tower')) return; const rect=world.getBoundingClientRect(); handleWorldClick(e.clientX-rect.left, e.clientY-rect.top); });
-  world.addEventListener('touchstart',e=>{ if(e.target.closest('.tower')) return; const t=e.touches[0]; const rect=world.getBoundingClientRect(); handleWorldClick(t.clientX-rect.left,t.clientY-rect.top); },{passive:true});
-
-  // Bag item quick use toggles (กดที่ tag เพื่อเตรียมใช้)
-  ui.bag.addEventListener('click',e=>{
-    const txt=e.target.textContent||'';
-    if(/Bomb/.test(txt)){ S._use = (S._use==='bomb'?null:'bomb'); tip(S._use?'แตะที่สนามเพื่อใช้ Bomb':'ยกเลิกใช้ Bomb'); }
-    else if(/Freeze/.test(txt)){ S._use = (S._use==='freeze'?null:'freeze'); tip(S._use?'แตะที่สนามเพื่อใช้ Freeze':'ยกเลิกใช้ Freeze'); }
-    else if(/Overclock/.test(txt)){ if(S.items.oc>0){ useOverclock(); S.items.oc--; renderBag(); } }
-  });
-
-  // ---------- Init ----------
-  function addInv(name){ const d=el('div','tag'); d.textContent=name; /* แค่มองเห็นดรอป */ }
-  function gameOver(){ S.paused=true; S.running=false; tip('ฐานแตก! รีเซ็ตหน้าเพื่อเริ่มใหม่'); }
-
-  function initGame(){
-    const diff=DIFF[S.difficulty];
-    S.baseHP=diff.hp; S.gold=diff.gold; S.wave=1; S.stage=1; S.difficultyScale=1.0;
-    S.towers=[]; S.enemies=[]; S.bullets=[]; S.items={bomb:0,freeze:0,oc:0};
-    S.research={ball1:false,ball2:false,fin1:false,fin2:false,arc1:false,arc2:false};
-    buildStage(S.stage); updHUD(); selectTower(null); tip('วางป้อมแล้วเริ่ม Wave');
-  }
-
-  // Overlay start
-  $("ovrGo").onclick=()=>{
-    S.difficulty = $("selDiff").value;
-    S.endless = $("chkEndless").checked;
-    hide('overlay');
-    initGame();
-  };
-
-  // Run loop
-  RAF(loop);
+  window.addEventListener('pageshow', ()=> setTimeout(demo, 600), {once:true});
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible'){ setTimeout(demo, 800); } }, {once:true});
+  // 2) Fallback: start after 1.2s regardless
+  setTimeout(demo, 1200);
+  // 3) Button for real browsers
+  const ovrBtn=$("ovrGo"); ovrBtn.addEventListener('click', demo); ovrBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); demo(); }, {passive:false});
+  const ovrBtn=$("ovrGo"); ovrBtn.addEventListener('click', demo); ovrBtn.addEventListener('touchstart',(e)=>{ e.preventDefault(); demo(); }, {passive:false});
 })();
 </script>
 </body>
-</html>
